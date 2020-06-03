@@ -1,4 +1,4 @@
-# Multiverse
+# Multiverses
 
 ## Multiverses for Elixir.
 
@@ -9,15 +9,15 @@ Wubba dubba lub lub!
 ## Installation
 
 The package can be installed
-by adding `multiverse` to your list of dependencies in `mix.exs`:
+by adding `multiverses` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:multiverse, "~> 0.1.0"}
+    {:multiverses, "~> 0.1.0"}
   ]
 end
 ```
 
-Documentation can be found at [https://hexdocs.pm/multiverse](https://hexdocs.pm/multiverse).
+Documentation can be found at [https://hexdocs.pm/multiverses](https://hexdocs.pm/multiverses).
 

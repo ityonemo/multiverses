@@ -1,30 +1,30 @@
-defmodule MultiverseTest.Registry.TestServer do
-  use Multiverse, with: Registry
-  alias Multiverse.Registry
+defmodule MultiversesTest.Registry.TestServer do
+  use Multiverses, with: Registry
+  alias Multiverses.Registry
 
   use GenServer
 
   def start_link(reg, name) do
-    link = Multiverse.link()
+    link = Multiverses.link()
     GenServer.start_link(__MODULE__, {reg, name, link})
   end
 
   def init({reg, name, link}) do
-    Multiverse.port(link)
+    Multiverses.port(link)
     Registry.register(reg, name, nil)
     {:ok, nil}
   end
 end
 
-import MultiverseTest.Replicant
+import MultiversesTest.Replicant
 
-defmoduler MultiverseTest.RegistryTest do
-  use Multiverse, with: Registry
-  alias Multiverse.Registry
+defmoduler MultiversesTest.RegistryTest do
+  use Multiverses, with: Registry
+  alias Multiverses.Registry
 
   use ExUnit.Case, async: true
 
-  alias MultiverseTest.Registry.TestServer
+  alias MultiversesTest.Registry.TestServer
 
   describe "Registry registries" do
     test "store sharded views of state" do

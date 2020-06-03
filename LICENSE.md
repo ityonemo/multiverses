@@ -1,4 +1,4 @@
-# Multiverse
+# Multiverses
 
 Copyright 2020 Isaac Yonemoto
 

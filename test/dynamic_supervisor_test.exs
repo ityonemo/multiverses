@@ -1,10 +1,10 @@
-defmodule MultiverseTest.DynamicSupervisor.TestServer do
+defmodule MultiversesTest.DynamicSupervisor.TestServer do
 
-  use Multiverse
+  use Multiverses
   use GenServer
 
   def start_supervised(sup) do
-    link = Multiverse.link()
+    link = Multiverses.link()
     DynamicSupervisor.start_child(sup, {__MODULE__, link})
   end
 
@@ -12,7 +12,7 @@ defmodule MultiverseTest.DynamicSupervisor.TestServer do
     GenServer.start_link(__MODULE__, link)
   end
   def init(link) do
-    Multiverse.port(link)
+    Multiverses.port(link)
     {:ok, nil}
   end
 
@@ -26,15 +26,15 @@ defmodule MultiverseTest.DynamicSupervisor.TestServer do
 
 end
 
-import MultiverseTest.Replicant
+import MultiversesTest.Replicant
 
-defmoduler MultiverseTest.DynamicSupervisorTest do
+defmoduler MultiversesTest.DynamicSupervisorTest do
   use ExUnit.Case, async: true
 
-  use Multiverse
+  use Multiverses
   import Mox
 
-  alias MultiverseTest.DynamicSupervisor.TestServer
+  alias MultiversesTest.DynamicSupervisor.TestServer
 
   setup :verify_on_exit!
 

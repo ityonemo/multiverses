@@ -1,4 +1,4 @@
-defmodule MultiverseTest.Replicant do
+defmodule MultiversesTest.Replicant do
   @doc """
   allows you to replicate test module multiple times, forcing them to
   be run concurrently.  This helps prove that the system can be run

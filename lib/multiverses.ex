@@ -1,4 +1,4 @@
-defmodule Multiverse do
+defmodule Multiverses do
   @moduledoc """
   Elixir introduces into the world of CS, the "multiverse testing" pattern.
   This is a pattern where tests are run concurrently and each test sees a
@@ -15,7 +15,7 @@ defmodule Multiverse do
     the BEAM that is reintercepted on ingress to the BEAM; this ID is
     then used to reconnect to the parent test pid.
 
-  This library implements Multiverse-aware versions of several constructs
+  This library implements Multiverses-aware versions of several constructs
   in the Elixir Standard Library which aren't natively Multiversable.
   Additional plugins will be provided for other systems, such as Phoenix.PubSub
   """
@@ -26,7 +26,7 @@ defmodule Multiverse do
     requires = Keyword.get(options, :with, [])
     |> List.wrap
     |> Enum.map(fn module_ast ->
-      module = Module.concat(Multiverse, Macro.expand(module_ast, __CALLER__))
+      module = Module.concat(Multiverses, Macro.expand(module_ast, __CALLER__))
 
       quote do
         require unquote(module)
@@ -34,7 +34,7 @@ defmodule Multiverse do
     end)
 
     [quote do
-      @use_multiverse true
+      @use_multiverses true
     end | requires]
   end
 

@@ -1,9 +1,9 @@
-defmodule Multiverse.MixProject do
+defmodule Multiverses.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :multiverse,
+      app: :multiverses,
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
@@ -18,10 +18,10 @@ defmodule Multiverse.MixProject do
           description: "multiverse support for Elixir Standard Library",
           licenses: ["MIT"],
           files: ~w(lib mix.exs README* LICENSE* VERSIONS*),
-          links: %{"GitHub" => "https://github.com/ityonemo/multiverse"}
+          links: %{"GitHub" => "https://github.com/ityonemo/multiverses"}
         ],
       docs: [
-        source_url: "https://github.com/ityonemo/multiverse"
+        source_url: "https://github.com/ityonemo/multiverses"
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps()

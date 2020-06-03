@@ -1,4 +1,4 @@
-defmodule Multiverse.Registry do
+defmodule Multiverses.Registry do
   @moduledoc """
   This module is intended to be a drop-in replacement for `Registry`, though
   currently not all functionality is implemented.
@@ -12,8 +12,8 @@ defmodule Multiverse.Registry do
   If multiverses have not been activated, then `nil` is placed as the registry value.
   """
   defmacro register(registry, key, _) do
-    universe = if Module.get_attribute(__CALLER__.module, :use_multiverse) do
-      quote do Multiverse.self() end
+    universe = if Module.get_attribute(__CALLER__.module, :use_multiverses) do
+      quote do Multiverses.self() end
     end
 
     quote do
@@ -22,18 +22,18 @@ defmodule Multiverse.Registry do
   end
 
   @doc """
-  retrives a process stored in the registry by its key.  If multiverses
+  retrives a process stored in the registry by its key.  If multiversess
   are activated, then this shards the registry by universe, and the caller
   will only be able to see processes in its universe.
   """
   defmacro get(registry, key) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverse) do
+    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
       quote do
-        require Multiverse
+        require Multiverses
         case Registry.select(unquote(registry),
           [{{:"$1", :"$2", :"$3"},
            [{:==, :"$1", {:const, unquote(key)}},
-            {:==, :"$3", {:const, Multiverse.self()}}],
+            {:==, :"$3", {:const, Multiverses.self()}}],
             [:"$2"]}]) do
           [pid] -> pid
           [] -> nil
@@ -58,11 +58,11 @@ defmodule Multiverse.Registry do
   will only be able to see processes in its universe.
   """
   defmacro all(registry) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverse) do
+    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
       quote do
         Registry.select(unquote(registry),
           [{{:"$1", :"$2", :"$3"},
-            [{:==, :"$3", {:const, Multiverse.self()}}],
+            [{:==, :"$3", {:const, Multiverses.self()}}],
             [:"$2"]}
           ])
       end

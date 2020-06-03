@@ -1,14 +1,14 @@
-defmodule MultiverseTest.GenServer.TestServer do
+defmodule MultiversesTest.GenServer.TestServer do
 
-  use Multiverse
+  use Multiverses
   use GenServer
 
   def start_link(_) do
-    link = Multiverse.link()
+    link = Multiverses.link()
     GenServer.start_link(__MODULE__, link)
   end
   def init(link) do
-    Multiverse.port(link)
+    Multiverses.port(link)
     {:ok, nil}
   end
 
@@ -22,14 +22,14 @@ defmodule MultiverseTest.GenServer.TestServer do
 
 end
 
-import MultiverseTest.Replicant
+import MultiversesTest.Replicant
 
-defmoduler MultiverseTest.GenServerTest do
+defmoduler MultiversesTest.GenServerTest do
   use ExUnit.Case, async: true
 
   import Mox
 
-  alias MultiverseTest.GenServer.TestServer
+  alias MultiversesTest.GenServer.TestServer
 
   setup :verify_on_exit!
 
