@@ -5,24 +5,24 @@ defmodule Multiverses.Registry do
   """
 
   @doc """
-  Registers the calling process with the Registry.  Works as `Registry.register/3`,
-  except the third `value` parameter on `register/3` will be dropped, as that is
-  where the universe id will be stored.
+  Registers the calling process with the Registry.  Works as `Registry.register/3` does.
 
   If multiverses have not been activated, then `nil` is placed as the registry value.
   """
-  defmacro register(registry, key, _) do
-    universe = if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do Multiverses.self() end
+  defmacro register(registry, key, value) do
+    modkey = if Module.get_attribute(__CALLER__.module, :use_multiverses) do
+      quote do {Multiverses.self(), unquote(key)} end
+    else
+      key
     end
 
     quote do
-      Registry.register(unquote(registry), unquote(key), unquote(universe))
+      Registry.register(unquote(registry), unquote(modkey), unquote(value))
     end
   end
 
   @doc """
-  retrives a process stored in the registry by its key.  If multiversess
+  retrives a process stored in the registry by its key.  If multiverses
   are activated, then this shards the registry by universe, and the caller
   will only be able to see processes in its universe.
   """
@@ -31,9 +31,8 @@ defmodule Multiverses.Registry do
       quote do
         require Multiverses
         case Registry.select(unquote(registry),
-          [{{:"$1", :"$2", :"$3"},
-           [{:==, :"$1", {:const, unquote(key)}},
-            {:==, :"$3", {:const, Multiverses.self()}}],
+          [{{:"$1", :"$2", :_},
+           [{:==, :"$1", {:const, {Multiverses.self(), unquote(key)}}}],
             [:"$2"]}]) do
           [pid] -> pid
           [] -> nil
@@ -61,8 +60,8 @@ defmodule Multiverses.Registry do
     if Module.get_attribute(__CALLER__.module, :use_multiverses) do
       quote do
         Registry.select(unquote(registry),
-          [{{:"$1", :"$2", :"$3"},
-            [{:==, :"$3", {:const, Multiverses.self()}}],
+          [{{:"$1", :"$2", :_},
+            [{:andalso, {:is_tuple, :"$1"}, {:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}}],
             [:"$2"]}
           ])
       end
