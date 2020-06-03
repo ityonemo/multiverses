@@ -14,6 +14,15 @@ defmodule Multiverse.MixProject do
          "coveralls.post": :test,
          "coveralls.html": :test,
          release: :lab],
+      package: [
+          description: "multiverse support for Elixir Standard Library",
+          licenses: ["MIT"],
+          files: ~w(lib mix.exs README* LICENSE* VERSIONS*),
+          links: %{"GitHub" => "https://github.com/ityonemo/multiverse"}
+        ],
+      docs: [
+        source_url: "https://github.com/ityonemo/multiverse"
+      ],
       elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps()
     ]

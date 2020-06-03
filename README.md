@@ -1,10 +1,14 @@
 # Multiverse
 
-**TODO: Add description**
+## Multiverses for Elixir.
+
+Don't let Mox, Ecto, Hound and Wallaby have ALL the fun!
+
+Wubba dubba lub lub!
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
+The package can be installed
 by adding `multiverse` to your list of dependencies in `mix.exs`:
 
 ```elixir
@@ -15,7 +19,5 @@ def deps do
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/multiverse](https://hexdocs.pm/multiverse).
+Documentation can be found at [https://hexdocs.pm/multiverse](https://hexdocs.pm/multiverse).
 
