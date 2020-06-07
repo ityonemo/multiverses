@@ -1,6 +1,5 @@
 defmodule MultiversesTest.Registry.TestServer do
   use Multiverses, with: Registry
-  alias Multiverses.Registry
 
   use GenServer
 
@@ -20,7 +19,6 @@ import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.RegistryTest do
   use Multiverses, with: Registry
-  alias Multiverses.Registry
 
   use ExUnit.Case, async: true
 

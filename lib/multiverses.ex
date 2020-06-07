@@ -30,6 +30,7 @@ defmodule Multiverses do
 
       quote do
         require unquote(module)
+        alias unquote(module)
       end
     end)
 

@@ -4,6 +4,10 @@ defmodule Multiverses.Registry do
   currently not all functionality is implemented.
   """
 
+  use Multiverses.MacroClone, module: Registry, except: [
+    register: 3
+  ]
+
   @doc """
   Registers the calling process with the Registry.  Works as `Registry.register/3` does.
 
