@@ -18,28 +18,45 @@ defmodule Multiverses do
   This library implements Multiverses-aware versions of several constructs
   in the Elixir Standard Library which aren't natively Multiversable.
   Additional plugins will be provided for other systems, such as Phoenix.PubSub
+
+  ## Usage
+
+  In your module where you'll be using at least one multiverse module, use the
+  following header:
+
+  ```elixir
+  use Multiverses, with: Registry, only: :test
+  ```
+
+  this aliases `Multiverses.Registry` to `Registry` and activates the
+  `Multiverses.Registry` macros across this module.  As an escape hatch, if you
+  need to use the underlying module, you may use the macro alias `Elixir.Registry`
+
+  ### Options
+
+  - `:with` the names of multiverse modules you'd like to use.  May be a single module
+    or a list of modules.  Is identical to `require <module>; alias <module>`.
+  - `:only` activate the multiverse system only in certain Mix environments.  May be
+    a single atom or a list of atoms.
   """
 
   @opaque link :: [pid]
 
   defmacro __using__(options) do
-    if Mix.env() in List.wrap(Keyword.get(options, :only, [Mix.env()])) do
-      [quote do
-        @use_multiverses true
-        require Multiverses
-      end | Keyword.get(options, :with, [])
-      |> List.wrap
-      |> Enum.map(fn module_ast ->
-        module = Module.concat(Multiverses, Macro.expand(module_ast, __CALLER__))
+    activate = Mix.env() in List.wrap(Keyword.get(options, :only, [Mix.env()]))
+    [quote do
+      @use_multiverses unquote(activate)
+      require Multiverses
+    end | Keyword.get(options, :with, [])
+    |> List.wrap
+    |> Enum.map(fn module_ast ->
+      module = Module.concat(Multiverses, Macro.expand(module_ast, __CALLER__))
 
-        quote do
-          require unquote(module)
-          alias unquote(module)
-        end
-      end)]
-    else
-      quote do end
-    end
+      quote do
+        require unquote(module)
+        alias unquote(module)
+      end
+    end)]
   end
 
   @doc """
