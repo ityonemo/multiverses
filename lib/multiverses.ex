@@ -32,6 +32,10 @@ defmodule Multiverses do
   `Multiverses.Registry` macros across this module.  As an escape hatch, if you
   need to use the underlying module, you may use the macro alias `Elixir.Registry`
 
+  If you need more complex choices for when to activate Multiverses (such as system
+  environment variables), you should encode those choices directly using logic around
+  the `use Multiverses` statement.
+
   ### Options
 
   - `:with` the names of multiverse modules you'd like to use.  May be a single module

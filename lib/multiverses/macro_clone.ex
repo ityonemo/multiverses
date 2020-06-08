@@ -3,9 +3,22 @@ defmodule Multiverses.MacroClone do
   allows a module to directly clone all of the public functions of a
   given module, except as macros.
 
-  this allows multiverse equivalents to replicate the functionality of
-  the parent module, except have the equivalents generated at compiletime,
-  allowing multiverse apps to exist as [runtime: false] apps.
+  thus multiverse equivalents replicate the functionality of the parent
+  module, except with the equivalents substituted at compile time,
+  allowing multiverse apps to exist as `[runtime: false]` apps.
+
+  ## Usage
+
+  In the following example, `FooModule` has all of its functions ported
+  into the current module, except as macros.  The functions `FooModule.foo/3`
+  and `FooModule.foo/4` are not, but rather should be ported using `defclone/2`
+
+  ```elixir
+  use Multiverses.MacroClone, with: FooModule, except: [
+    foo: 3,
+    foo: 4
+  ]
+  ```
   """
 
   defmacro __using__(opts) do
@@ -31,6 +44,14 @@ defmodule Multiverses.MacroClone do
     end])
   end
 
+  @spec defclone(Macro.t, Macro.t) :: Macro.t
+  @doc """
+  clones the target function from the parent module (as defined in the `use` statement)
+  as a macro, unless `use Multiverses` has been activated.
+
+  In the case that `use Multiverses` has been activated, the macro takes the value of the
+  contents inside the `defclone` block.
+  """
   defmacro defclone(header, do: block) do
     {fun, _, params} = header
 
@@ -98,13 +119,14 @@ defmodule Multiverses.MacroClone do
   ## NB This function should be considered "private" and is only public
   ## so that it can be testable.
   def mfa_to_macro(module, {function, arity}) do
+    [mfa_to_doc({module, function, arity}),
     {:defmacro, [context: Elixir, import: Kernel],
     [
       {function, [context: Elixir], arity_to_params(arity)},
       [do: {:quote, [context: Elixir], [[do: {:__block__, [], [
         mfa_to_call({module, function, arity})
       ]}]]}]
-    ]}
+    ]}]
   end
 
   @spec mfa_to_call(mfa) :: Macro.t
@@ -118,6 +140,13 @@ defmodule Multiverses.MacroClone do
 
     {{:., [], [{:__aliases__, [alias: false], module_alias}, function]}, [],
     arity_to_params(arity, true)}
+  end
+
+  defp mfa_to_doc({module, function, arity}) do
+    m = module |> Module.split |> Enum.join(".")
+    quote bind_quoted: [m: m, f: function, a: arity] do
+      @doc "cloned from `#{m}.#{f}/#{a}`"
+    end
   end
 
   defp arity_to_params(arity, unquoted \\ false)
