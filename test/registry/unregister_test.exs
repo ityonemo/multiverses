@@ -1,7 +1,7 @@
 import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.Registry.UnregisterTest do
-  use Multiverses, with: Registry
+  use Multiverses, with: Registry, only: :test
 
   use ExUnit.Case, async: true
 

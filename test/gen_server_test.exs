@@ -1,6 +1,6 @@
 defmodule MultiversesTest.GenServer.TestServer do
 
-  use Multiverses
+  use Multiverses, only: :test
   use GenServer
 
   def start_link(_) do

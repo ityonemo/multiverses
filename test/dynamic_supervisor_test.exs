@@ -1,6 +1,6 @@
 defmodule MultiversesTest.DynamicSupervisor.TestServer do
 
-  use Multiverses
+  use Multiverses, only: :test
   use GenServer
 
   def start_supervised(sup) do
@@ -31,7 +31,7 @@ import MultiversesTest.Replicant
 defmoduler MultiversesTest.DynamicSupervisorTest do
   use ExUnit.Case, async: true
 
-  use Multiverses
+  use Multiverses, only: :test
   import Mox
 
   alias MultiversesTest.DynamicSupervisor.TestServer

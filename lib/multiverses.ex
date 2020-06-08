@@ -23,19 +23,23 @@ defmodule Multiverses do
   @opaque link :: [pid]
 
   defmacro __using__(options) do
-    [quote do
-      @use_multiverses true
-      require Multiverses
-    end | Keyword.get(options, :with, [])
-    |> List.wrap
-    |> Enum.map(fn module_ast ->
-      module = Module.concat(Multiverses, Macro.expand(module_ast, __CALLER__))
+    if Mix.env() in List.wrap(Keyword.get(options, :only, [Mix.env()])) do
+      [quote do
+        @use_multiverses true
+        require Multiverses
+      end | Keyword.get(options, :with, [])
+      |> List.wrap
+      |> Enum.map(fn module_ast ->
+        module = Module.concat(Multiverses, Macro.expand(module_ast, __CALLER__))
 
-      quote do
-        require unquote(module)
-        alias unquote(module)
-      end
-    end)]
+        quote do
+          require unquote(module)
+          alias unquote(module)
+        end
+      end)]
+    else
+      quote do end
+    end
   end
 
   @doc """
