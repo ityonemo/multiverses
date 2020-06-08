@@ -23,7 +23,10 @@ defmodule Multiverses do
   @opaque link :: [pid]
 
   defmacro __using__(options) do
-    requires = Keyword.get(options, :with, [])
+    [quote do
+      @use_multiverses true
+      require Multiverses
+    end | Keyword.get(options, :with, [])
     |> List.wrap
     |> Enum.map(fn module_ast ->
       module = Module.concat(Multiverses, Macro.expand(module_ast, __CALLER__))
@@ -32,12 +35,7 @@ defmodule Multiverses do
         require unquote(module)
         alias unquote(module)
       end
-    end)
-
-    [quote do
-      @use_multiverses true
-      require Multiverses
-    end | requires]
+    end)]
   end
 
   @doc """

@@ -21,22 +21,31 @@ defmodule Multiverses.Registry do
     select: 2,
   ]
 
-  defmacro count(registry) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do
-        unquote(registry)
-        |> Registry.select([{
-          {:"$1", :_, :_},
-          [{:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}],
-          [:"$1"]}])
-        |> Enum.count
-      end
-    else
-      quote do
-        Registry.count(unquote(registry))
-      end
-    end
+  defclone count(registry) do
+    registry
+    |> Registry.select([{
+      {:"$1", :_, :_},
+      [{:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}],
+      [:"$1"]}])
+    |> Enum.count
   end
+
+  #defmacro count(registry) do
+  #  if Module.get_attribute(__CALLER__.module, :use_multiverses) do
+  #    quote do
+  #      unquote(registry)
+  #      |> Registry.select([{
+  #        {:"$1", :_, :_},
+  #        [{:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}],
+  #        [:"$1"]}])
+  #      |> Enum.count
+  #    end
+  #  else
+  #    quote do
+  #      Registry.count(unquote(registry))
+  #    end
+  #  end
+  #end
 
   defmacro dispatch(registry, key, fun, opts \\ []) do
     if Module.get_attribute(__CALLER__.module, :use_multiverses) do

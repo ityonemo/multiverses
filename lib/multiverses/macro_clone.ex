@@ -20,11 +20,65 @@ defmodule Multiverses.MacroClone do
     module = Macro.expand(opts[:module], __CALLER__)
     except = Macro.expand(opts[:except], __CALLER__)
 
+    Module.put_attribute(__CALLER__.module, :parent_module, module)
+
     :functions
     |> module.__info__
     |> Enum.reject(&(&1 in except))
     |> Enum.map(&mfa_to_macro(module, &1))
+    |> Kernel.++([quote do
+      import Multiverses.MacroClone, only: [defclone: 2]
+    end])
   end
+
+  defmacro defclone(header, do: block) do
+    {fn_name, _, params} = header
+    macro_params = Enum.map(
+      params, fn {var, _, nil} -> {var, [], Elixir} end)
+
+    parent = __CALLER__.module
+    |> Module.get_attribute(:parent_module)
+    |> Module.split
+    |> Enum.map(&String.to_atom/1)
+
+    {:defmacro, [context: Elixir, import: Kernel],
+    [
+      {fn_name, [context: Elixir], macro_params},
+      [do: clone_body(parent, fn_name, macro_params, block)]
+    ]}
+  end
+
+  defp clone_body(module, fun, args, block) do
+    quote do
+      if Module.get_attribute(__CALLER__.module, :use_multiverses) do
+        unquote(block_call(args, block))
+      else
+        unquote(naked_call(module, fun, args))
+      end
+    end
+  end
+
+  defp block_call(args, block) do
+    {:quote, [context: Elixir],
+      [[bind_quoted: bind_args(args)], [do: block]]}
+  end
+
+  defp naked_call(module, fun, args) do
+    call = {
+      {:., [], [{:__aliases__, [alias: false], module}, fun]},
+      [],
+      args}
+
+    {:quote, [context: Elixir],
+      [[bind_quoted: bind_args(args)], [do: call]]}
+  end
+
+  defp bind_args(args) do
+    Enum.map(args, fn {var, _, _} ->
+      {var, {var, [], Elixir}}
+    end)
+  end
+
 
   @spec mfa_to_macro(module, {atom, arity}) :: Macro.t
   @doc false
