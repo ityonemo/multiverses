@@ -36,6 +36,7 @@ defmodule Multiverses do
 
     [quote do
       @use_multiverses true
+      require Multiverses
     end | requires]
   end
 

@@ -1,20 +1,3 @@
-defmodule MultiversesTest.Registry.TestServer do
-  use Multiverses, with: Registry
-
-  use GenServer
-
-  def start_link(reg, name) do
-    link = Multiverses.link()
-    GenServer.start_link(__MODULE__, {reg, name, link})
-  end
-
-  def init({reg, name, link}) do
-    Multiverses.port(link)
-    Registry.register(reg, name, nil)
-    {:ok, nil}
-  end
-end
-
 import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.RegistryTest do
@@ -29,7 +12,7 @@ defmoduler MultiversesTest.RegistryTest do
       test_pid = self()
 
       reg = test_pid |> inspect |> String.to_atom
-      {:ok, _reg} = Elixir.Registry.start_link(keys: :unique, name: reg)
+      {:ok, _reg} = Registry.start_link(keys: :unique, name: reg)
 
       {:ok, foo} = TestServer.start_link(reg, :foo)
 
@@ -58,7 +41,7 @@ defmoduler MultiversesTest.RegistryTest do
       test_pid = self()
 
       reg = test_pid |> inspect |> String.to_atom
-      {:ok, _reg} = Elixir.Registry.start_link(keys: :duplicate, name: reg)
+      {:ok, _reg} = Registry.start_link(keys: :duplicate, name: reg)
 
       {:ok, foo} = TestServer.start_link(reg, :foo)
 
