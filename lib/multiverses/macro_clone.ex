@@ -32,9 +32,22 @@ defmodule Multiverses.MacroClone do
   end
 
   defmacro defclone(header, do: block) do
-    {fn_name, _, params} = header
+    {fun, _, params} = header
+
+    # the cloned macro needs to keep the default values.
     macro_params = Enum.map(
-      params, fn {var, _, nil} -> {var, [], Elixir} end)
+      params, fn
+        {:\\, _, [{var, _, _}, default]} ->
+          {:\\, [], [{var, [], Elixir}, default]}
+        {var, _, nil} ->
+          {var, [], Elixir}
+      end)
+
+    # inner functon values don't keep the default values.
+    args = Enum.map(macro_params, fn
+      {:\\, _, [any, _]} -> any
+      any -> any
+    end)
 
     parent = __CALLER__.module
     |> Module.get_attribute(:parent_module)
@@ -43,8 +56,8 @@ defmodule Multiverses.MacroClone do
 
     {:defmacro, [context: Elixir, import: Kernel],
     [
-      {fn_name, [context: Elixir], macro_params},
-      [do: clone_body(parent, fn_name, macro_params, block)]
+      {fun, [context: Elixir], macro_params},
+      [do: clone_body(parent, fun, args, block)]
     ]}
   end
 

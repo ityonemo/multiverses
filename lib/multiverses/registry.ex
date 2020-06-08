@@ -9,173 +9,117 @@ defmodule Multiverses.Registry do
   - `unregister_match/3,4`
   """
 
-  use Multiverses.MacroClone, module: Registry, except: [
-    count: 1,
-    dispatch: 3,
-    dispatch: 4,
-    keys: 2,
-    lookup: 2,
-    register: 3,
-    unregister: 2,
-    update_value: 3,
-    select: 2,
-  ]
+  use Multiverses.MacroClone,
+    module: Registry,
+    except: [
+      count: 1,
+      dispatch: 3,
+      dispatch: 4,
+      keys: 2,
+      lookup: 2,
+      register: 3,
+      unregister: 2,
+      update_value: 3,
+      select: 2
+    ]
 
   defclone count(registry) do
     registry
-    |> Registry.select([{
-      {:"$1", :_, :_},
-      [{:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}],
-      [:"$1"]}])
-    |> Enum.count
+    |> Registry.select([
+      {
+        {:"$1", :_, :_},
+        [{:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}],
+        [:"$1"]
+      }
+    ])
+    |> Enum.count()
   end
 
-  #defmacro count(registry) do
-  #  if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-  #    quote do
-  #      unquote(registry)
-  #      |> Registry.select([{
-  #        {:"$1", :_, :_},
-  #        [{:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}],
-  #        [:"$1"]}])
-  #      |> Enum.count
-  #    end
-  #  else
-  #    quote do
-  #      Registry.count(unquote(registry))
-  #    end
-  #  end
-  #end
-
-  defmacro dispatch(registry, key, fun, opts \\ []) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do
-        Registry.dispatch(unquote(registry), {Multiverses.self(), unquote(key)}, unquote(fun), unquote(opts))
-      end
-    else
-      quote do
-        Registry.dispatch(unquote(registry), unquote(key), unquote(fun), unquote(opts))
-      end
-    end
+  defclone dispatch(registry, key, fun, opts \\ []) do
+    Registry.dispatch(registry, {Multiverses.self(), key}, fun, opts)
   end
 
-  defmacro keys(registry, pid) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do
-        universe = Multiverses.self()
-        unquote(registry)
-        |> Registry.keys(unquote(pid))
-        |> Enum.map(fn {^universe, key} -> key end)
-        # NB: there shouldn't be any pids that don't match this universe.
-      end
-    else
-      quote do
-        Registry.keys(unquote(registry), unquote(pid))
-      end
-    end
+  defclone keys(registry, pid) do
+    universe = Multiverses.self()
+
+    registry
+    |> Registry.keys(pid)
+    |> Enum.map(fn {^universe, key} -> key end)
+
+    # NB: there shouldn't be any pids that don't match this universe.
   end
 
-  defmacro lookup(registry, key) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do
-        unquote(registry)
-        |> Registry.lookup({Multiverses.self(), unquote(key)})
-        |> Enum.map(fn {pid, value} -> {pid, value} end)
-        # NB: there shouldn't be any pids that don't match this universe.
-      end
-    else
-      quote do
-        Registry.lookup(unquote(registry), unquote(key))
-      end
-    end
+  defclone lookup(registry, key) do
+    Registry.lookup(registry, {Multiverses.self(), key})
   end
 
   @doc """
   Registers the calling process with the Registry.  Works as `Registry.register/3` does.
   """
-  defmacro register(registry, key, value) do
-    modkey = if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do {Multiverses.self(), unquote(key)} end
-    else
-      key
-    end
-
-    quote do
-      Registry.register(unquote(registry), unquote(modkey), unquote(value))
-    end
+  defclone register(registry, key, value) do
+    Registry.register(registry, {Multiverses.self(), key}, value)
   end
 
-  defmacro select(registry, spec) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do
-        universe = Multiverses.self()
-        spec = Enum.map(unquote(spec), fn {match, filters, result} ->
-          {new_match, match_var} = case match do
-            {:_, a, b} -> {{:"$4", a, b}, :"$4"}
-            {a, b, c} -> {{a, b, c}, a}
-          end
+  defclone select(registry, spec) do
+    universe = Multiverses.self()
+    new_spec = Enum.map(spec, fn {match, filters, result} ->
+      {new_match, match_var} =
+        case match do
+          {:_, a, b} -> {{:"$4", a, b}, :"$4"}
+          {a, b, c} -> {{a, b, c}, a}
+        end
 
-          adjust = fn
-            ^match_var, _self ->
-              {:element, 2, match_var}
-            list, self when is_list(list) ->
-              Enum.map(list, &self.(&1, self))
-            tuple, self when is_tuple(tuple) ->
-              tuple
-              |> Tuple.to_list
-              |> self.(self)
-              |> List.to_tuple
-            map, self when is_map(map) ->
-              map
-              |> Enum.map(fn
-                {key, value} ->
-                  {self.(key, self), self.(value, self)}
-              end)
-              |> Enum.into(%{})
-            any, _self -> any
-          end
+      # this adjustment function has to takes existing filters and results
+      # and intrusively changes them to select on the second part of the
+      # element when the match var matches the first position.  This needs
+      # to be a arity-2 function that is passed itself, to allow using
+      # recursivity in a lambda with a y-combinator technique.
+      # NB: this needs to be a lambda so that Multiverses can be compile-time
+      # only.
 
-          new_filters = adjust.(filters, adjust) ++
-            [{:==, {:element, 1, match_var}, {:const, universe}}]
+      adjust = fn
+        ^match_var, _self ->
+          {:element, 2, match_var}
 
+        list, self when is_list(list) ->
+          Enum.map(list, &self.(&1, self))
 
-          new_result = adjust.(result, adjust)
+        tuple, self when is_tuple(tuple) ->
+          tuple
+          |> Tuple.to_list()
+          |> self.(self)
+          |> List.to_tuple()
 
-          {new_match, new_filters, new_result}
-        end)
+        map, self when is_map(map) ->
+          map
+          |> Enum.map(fn
+            {key, value} ->
+              {self.(key, self), self.(value, self)}
+          end)
+          |> Enum.into(%{})
 
-        Registry.select(unquote(registry), spec)
-        # NB: there shouldn't be any pids that don't match this universe.
+        any, _self ->
+          any
       end
-    else
-      quote do
-        Registry.select(unquote(registry), unquote(spec))
-      end
-    end
+
+      new_filters =
+        adjust.(filters, adjust) ++
+          [{:==, {:element, 1, match_var}, {:const, universe}}]
+
+      new_result = adjust.(result, adjust)
+
+      {new_match, new_filters, new_result}
+    end)
+
+    Registry.select(registry, new_spec)
   end
 
-  defmacro unregister(registry, key) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do
-        Registry.unregister(unquote(registry), {Multiverses.self(), unquote(key)})
-      end
-    else
-      quote do
-        Registry.unregister(unquote(registry), unquote(key))
-      end
-    end
+  defclone unregister(registry, key) do
+    Registry.unregister(registry, {Multiverses.self(), key})
   end
 
-  defmacro update_value(registry, key, callback) do
-    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
-      quote do
-        Registry.update_value(unquote(registry), {Multiverses.self(), unquote(key)}, unquote(callback))
-      end
-    else
-      quote do
-        Registry.update_value(unquote(registry), unquote(key), unquote(callback))
-      end
-    end
+  defclone update_value(registry, key, callback) do
+    Registry.update_value(registry, {Multiverses.self(), key}, callback)
   end
 
   @doc """
@@ -186,20 +130,23 @@ defmodule Multiverses.Registry do
   defmacro get(registry, key) do
     if Module.get_attribute(__CALLER__.module, :use_multiverses) do
       quote do
-        case Registry.select(unquote(registry),
-          [{{:"$1", :"$2", :_},
-           [{:==, :"$1", {:const, {Multiverses.self(), unquote(key)}}}],
-            [:"$2"]}]) do
+        case Registry.select(
+               unquote(registry),
+               [
+                 {{:"$1", :"$2", :_},
+                  [{:==, :"$1", {:const, {Multiverses.self(), unquote(key)}}}], [:"$2"]}
+               ]
+             ) do
           [pid] -> pid
           [] -> nil
         end
       end
     else
       quote do
-        case Registry.select(unquote(registry),
-          [{{:"$1", :"$2", :_},
-            [{:==, :"$1", {:const, unquote(key)}}],
-            [:"$2"]}]) do
+        case Registry.select(
+               unquote(registry),
+               [{{:"$1", :"$2", :_}, [{:==, :"$1", {:const, unquote(key)}}], [:"$2"]}]
+             ) do
           [pid] -> pid
           [] -> nil
         end
@@ -215,11 +162,16 @@ defmodule Multiverses.Registry do
   defmacro all(registry) do
     if Module.get_attribute(__CALLER__.module, :use_multiverses) do
       quote do
-        Registry.select(unquote(registry),
-          [{{:"$1", :"$2", :_},
-            [{:andalso, {:is_tuple, :"$1"}, {:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}}],
-            [:"$2"]}
-          ])
+        Registry.select(
+          unquote(registry),
+          [
+            {{:"$1", :"$2", :_},
+             [
+               {:andalso, {:is_tuple, :"$1"},
+                {:==, {:element, 1, :"$1"}, {:const, Multiverses.self()}}}
+             ], [:"$2"]}
+          ]
+        )
       end
     else
       quote do
@@ -227,5 +179,4 @@ defmodule Multiverses.Registry do
       end
     end
   end
-
 end
