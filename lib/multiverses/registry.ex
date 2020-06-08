@@ -6,6 +6,7 @@ defmodule Multiverses.Registry do
   Unimplemented functionality:
   - `count_match/3,4`
   - `match/3,4`
+  - `unregister_match/3,4`
   """
 
   use Multiverses.MacroClone, module: Registry, except: [
@@ -15,6 +16,8 @@ defmodule Multiverses.Registry do
     keys: 2,
     lookup: 2,
     register: 3,
+    unregister: 2,
+    update_value: 3,
     select: 2,
   ]
 
@@ -138,6 +141,30 @@ defmodule Multiverses.Registry do
     else
       quote do
         Registry.select(unquote(registry), unquote(spec))
+      end
+    end
+  end
+
+  defmacro unregister(registry, key) do
+    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
+      quote do
+        Registry.unregister(unquote(registry), {Multiverses.self(), unquote(key)})
+      end
+    else
+      quote do
+        Registry.unregister(unquote(registry), unquote(key))
+      end
+    end
+  end
+
+  defmacro update_value(registry, key, callback) do
+    if Module.get_attribute(__CALLER__.module, :use_multiverses) do
+      quote do
+        Registry.update_value(unquote(registry), {Multiverses.self(), unquote(key)}, unquote(callback))
+      end
+    else
+      quote do
+        Registry.update_value(unquote(registry), unquote(key), unquote(callback))
       end
     end
   end
