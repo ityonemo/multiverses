@@ -83,8 +83,16 @@ defmodule Multiverses.MacroClone do
   end
 
   defp clone_body(module, fun, args, block) do
-    quote do
-      if Module.get_attribute(__CALLER__.module, :use_multiverses) do
+    quote location: :keep do
+      this_app = Mix.Project.get
+      |> apply(:project, [])
+      |> Keyword.get(:app)
+
+      use_multiverses? = __CALLER__.module
+      |> Module.get_attribute(:multiverse_otp_app, this_app)
+      |> Application.get_env(:use_multiverses, this_app == :multiverses)
+
+      if use_multiverses? do
         unquote(block_call(args, block))
       else
         unquote(naked_call(module, fun, args))
@@ -101,10 +109,9 @@ defmodule Multiverses.MacroClone do
     call = {
       {:., [], [{:__aliases__, [alias: false], module}, fun]},
       [],
-      args}
+      Enum.map(args, &to_unquoted/1)}
 
-    {:quote, [context: Elixir],
-      [[bind_quoted: bind_args(args)], [do: call]]}
+    {:quote, [context: Elixir], [[do: call]]}
   end
 
   defp bind_args(args) do
@@ -113,6 +120,7 @@ defmodule Multiverses.MacroClone do
     end)
   end
 
+  defp to_unquoted(var), do: {:unquote, [], [var]}
 
   @spec mfa_to_macro(module, {atom, arity}) :: Macro.t
   @doc false
@@ -144,8 +152,9 @@ defmodule Multiverses.MacroClone do
 
   defp mfa_to_doc({module, function, arity}) do
     m = module |> Module.split |> Enum.join(".")
-    quote bind_quoted: [m: m, f: function, a: arity] do
-      @doc "cloned from `#{m}.#{f}/#{a}`"
+    docstr = "cloned from `#{m}.#{function}/#{arity}`"
+    quote do
+      @doc unquote(docstr)
     end
   end
 

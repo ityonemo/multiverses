@@ -1,4 +1,4 @@
-defmodule MultiversesTest.GenServer.TestServer do
+defmodule MultiversesTest.TestServer do
 
   use Multiverses, only: :test
   use GenServer
@@ -24,12 +24,12 @@ end
 
 import MultiversesTest.Replicant
 
-defmoduler MultiversesTest.GenServerTest do
+defmoduler MultiversesTest.ServerTest do
   use ExUnit.Case, async: true
 
   import Mox
 
-  alias MultiversesTest.GenServer.TestServer
+  alias MultiversesTest.TestServer
 
   setup :verify_on_exit!
 
