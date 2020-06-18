@@ -93,4 +93,13 @@ defmodule Multiverses do
     end
   end
 
+  @doc """
+  purges the caller list.
+  """
+  defmacro drop do
+    quote do
+      Process.delete(:"$callers")
+    end
+  end
+
 end

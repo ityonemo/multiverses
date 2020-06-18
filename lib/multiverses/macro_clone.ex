@@ -144,8 +144,9 @@ defmodule Multiverses.MacroClone do
 
   defp mfa_to_doc({module, function, arity}) do
     m = module |> Module.split |> Enum.join(".")
-    quote bind_quoted: [m: m, f: function, a: arity] do
-      @doc "cloned from `#{m}.#{f}/#{a}`"
+    docstr = "cloned from `#{m}.#{function}/#{arity}`"
+    quote do
+      @doc unquote(docstr)
     end
   end
 
