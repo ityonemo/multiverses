@@ -121,4 +121,25 @@ defmodule Multiverses.Registry do
   defclone update_value(registry, key, callback) do
     Registry.update_value(registry, {Multiverses.self(), key}, callback)
   end
+
+  defmacro via(reg, key) do
+    this_app = Mix.Project.get
+    |> apply(:project, [])
+    |> Keyword.get(:app)
+
+    use_multiverses? = __CALLER__.module
+    |> Module.get_attribute(:multiverse_otp_app, this_app)
+    |> Application.get_env(:use_multiverses, this_app == :multiverses)
+
+    if use_multiverses? do
+      quote do
+        {:via, Registry, {unquote(reg), {Multiverses.self(), unquote(key)}}}
+      end
+    else
+      quote do
+        {:via, Registry, {unquote(reg), unquote(key)}}
+      end
+    end
+  end
+
 end

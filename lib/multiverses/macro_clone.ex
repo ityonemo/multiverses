@@ -83,7 +83,7 @@ defmodule Multiverses.MacroClone do
   end
 
   defp clone_body(module, fun, args, block) do
-    quote location: :keep do
+    quote do
       this_app = Mix.Project.get
       |> apply(:project, [])
       |> Keyword.get(:app)
