@@ -1,5 +1,5 @@
 defmodule MultiversesTest.Registry.TestServer do
-  use Multiverses, with: Registry, only: :test
+  use Multiverses, with: Registry
 
   use GenServer
 

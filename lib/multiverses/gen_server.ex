@@ -31,7 +31,7 @@ defmodule Multiverses.GenServer do
   defmacro __using__(opts) do
 
     multiverse_opts = Macro.escape(opts) ++ [with: GenServer]
-    gen_server_opts = opts |> Keyword.drop([:only]) |> Macro.escape
+    gen_server_opts = opts |> Keyword.drop([:otp_app]) |> Macro.escape
 
     quote do
       @behaviour GenServer

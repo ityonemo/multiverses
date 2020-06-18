@@ -25,7 +25,7 @@ defmodule Multiverses do
   following header:
 
   ```elixir
-  use Multiverses, with: Registry, only: :test
+  use Multiverses, with: Registry
   ```
 
   this aliases `Multiverses.Registry` to `Registry` and activates the
