@@ -34,7 +34,7 @@ defmodule Multiverses.GenServer do
     gen_server_opts = opts |> Keyword.drop([:only]) |> Macro.escape
 
     quote do
-      @behaviour :gen_server
+      @behaviour GenServer
 
       use Multiverses, unquote(multiverse_opts)
 
@@ -98,14 +98,14 @@ defmodule Multiverses.GenServer do
   @doc """
   starts a GenServer, linked to the calling function.
   """
-  defclone start_link(module, init, opts \\ []) do
-    __MODULE__.do_start(:link, module, init, opts)
+  defclone start_link(module, init_state, opts \\ []) do
+    __MODULE__.do_start(:link, module, init_state, opts)
   end
 
   @doc """
   starts a GenServer, linked to the calling function.
   """
-  defclone start(module, init, opts \\ []) do
-    __MODULE__.do_start(:nolink, module, init, opts)
+  defclone start(module, init_state, opts \\ []) do
+    __MODULE__.do_start(:nolink, module, init_state, opts)
   end
 end

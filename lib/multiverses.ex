@@ -39,17 +39,22 @@ defmodule Multiverses do
   ### Options
 
   - `:with` the names of multiverse modules you'd like to use.  May be a single module
-    or a list of modules.  Is identical to `require <module>; alias <module>`.
-  - `:only` activate the multiverse system only in certain Mix environments.  May be
-    a single atom or a list of atoms.
+    or a list of modules.  Is identical to `require Multiverses.<module>; alias Multiverses.<module>`.
+  - `:otp_app` the otp_app must have its :use_multiverses application environment
+    variable set in order to be used.
   """
 
   @opaque link :: [pid]
 
   defmacro __using__(options) do
-    activate = Mix.env() in List.wrap(Keyword.get(options, :only, [Mix.env()]))
+    otp_app = Keyword.get_lazy(options, :otp_app, fn ->
+      Mix.Project.get
+      |> apply(:project, [])
+      |> Keyword.get(:app)
+    end)
+
     [quote do
-      @use_multiverses unquote(activate)
+      @multiverse_otp_app unquote(otp_app)
       require Multiverses
     end | Keyword.get(options, :with, [])
     |> List.wrap
