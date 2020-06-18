@@ -4,7 +4,7 @@ defmodule Multiverses.MixProject do
   def project do
     [
       app: :multiverses,
-      version: "0.3.0",
+      version: "0.4.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],

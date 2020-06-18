@@ -20,3 +20,4 @@
 - replaces `:only` activation in favor of using Application settings
 - adds support for `GenServer` and `DynamicSupervisor`
 - removes nonstandard `Registry` functions
+- adds `Multiverses.Registry.via/2` macro.
