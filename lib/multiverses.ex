@@ -21,6 +21,12 @@ defmodule Multiverses do
 
   ## Usage
 
+  In `mix.exs`, you should add the following directive:
+
+  ```
+  {:multiverses, "~> #{Multiverses.MixProject.version}", runtime: false}
+  ```
+
   In your module where you'll be using at least one multiverse module, use the
   following header:
 

@@ -1,10 +1,12 @@
 defmodule Multiverses.MixProject do
   use Mix.Project
 
+  def version, do: "0.4.0"
+
   def project do
     [
       app: :multiverses,
-      version: "0.4.0",
+      version: version(),
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
@@ -21,6 +23,8 @@ defmodule Multiverses.MixProject do
           links: %{"GitHub" => "https://github.com/ityonemo/multiverses"}
         ],
       docs: [
+        main: "Multiverses",
+        extras: ["README.md"],
         source_url: "https://github.com/ityonemo/multiverses"
       ],
       elixirc_paths: elixirc_paths(Mix.env()),
