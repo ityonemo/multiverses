@@ -6,18 +6,22 @@ defmodule Multiverses do
 
   ## Examples:
 
-  - `Mox`: each tests has access to the global module mock, sharded by the
+  - `Mox`: each test has access to the global module mock, sharded by the
     pid of the running test.
   - `Ecto`: each test has access to a "database sandbox", which is a
     checked out transaction on the global database that acts as its own
     database shard.
-  - `Hound`,`Wallaby`: each test generates an ID that is passed outside of
-    the BEAM that is reintercepted on ingress to the BEAM; this ID is
-    then used to reconnect to the parent test pid.
+  - `Hound`,`Wallaby`: each test generates an ID that is passed outside of the
+    BEAM that is reintercepted on ingress, this ID is then used to connect
+    ecto sandboxes to the parent test PID
 
   This library implements Multiverses-aware versions of several constructs
   in the Elixir Standard Library which aren't natively Multiversable.
-  Additional plugins will be provided for other systems, such as Phoenix.PubSub
+
+  For plugins that are provided for other systems, see the libraries:
+
+  - :multiverses_finch  - which extends this to HTTP requests that exit the BEAM.
+  - :multiverses_pubsub - which extends this to Phoenix.PubSub
 
   ## Usage
 

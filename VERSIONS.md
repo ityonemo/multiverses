@@ -21,3 +21,8 @@
 - adds support for `GenServer` and `DynamicSupervisor`
 - removes nonstandard `Registry` functions
 - adds `Multiverses.Registry.via/2` macro.
+
+## 0.4.1
+
+- makes replicants available in the main library so that adapters can
+  more easily use them
