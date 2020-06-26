@@ -63,17 +63,28 @@ defmodule Multiverses do
       |> Keyword.get(:app)
     end)
 
+    Module.register_attribute(
+      __CALLER__.module,
+      :active_modules,
+      accumulate: true)
+
     [quote do
       @multiverse_otp_app unquote(otp_app)
       require Multiverses
     end | Keyword.get(options, :with, [])
     |> List.wrap
     |> Enum.map(fn module_ast ->
-      module = Module.concat(Multiverses, Macro.expand(module_ast, __CALLER__))
+      parent_module = Macro.expand(module_ast, __CALLER__)
+      multiverse_module = Module.concat(Multiverses, parent_module)
+
+      Module.put_attribute(
+        __CALLER__.module,
+        :active_modules,
+        parent_module)
 
       quote do
-        require unquote(module)
-        alias unquote(module)
+        require unquote(multiverse_module)
+        alias unquote(multiverse_module)
       end
     end)]
   end
@@ -115,6 +126,26 @@ defmodule Multiverses do
     quote do
       Process.delete(:"$callers")
     end
+  end
+
+  @spec overrides?(module, module) :: boolean
+  @doc """
+  this function can identify if a parent module has been overridden
+  with its Multiverse equivalent in this module.
+
+  **Important**: the parent_module parameter is interpreted in the
+  global aliasing context, and not in the context of the local
+  alias.
+
+  useful for making compile-time guarantees, for example in ExUnit
+  Case modules.
+  """
+  defmacro overrides?(module_ast, parent_module_ast) do
+    module = Macro.expand(module_ast, __CALLER__)
+    # the parent module should be expanded without local aliasing.
+    parent_module = Macro.expand(parent_module_ast, __ENV__)
+    active_modules = Module.get_attribute(module, :active_modules)
+    if active_modules, do: parent_module in active_modules, else: false
   end
 
 end
