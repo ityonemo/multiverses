@@ -26,3 +26,8 @@
 
 - makes replicants available in the main library so that adapters can
   more easily use them
+
+## 0.4.2
+
+- adds `Multiverses.overrides?/2` for compile-time checking of
+  multiverse overridden modules.
