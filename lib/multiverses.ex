@@ -1,8 +1,8 @@
 defmodule Multiverses do
   @moduledoc """
-  Elixir introduces into the world of CS, the "multiverse testing" pattern.
-  This is a pattern where tests are run concurrently and each test sees a
-  shard of global state.
+  Elixir introduces into the world of programming, the "multiverse testing"
+  pattern.  This is a pattern where integration tests are run concurrently
+  and each test sees a shard of global state.
 
   ## Examples:
 
@@ -15,8 +15,18 @@ defmodule Multiverses do
     BEAM that is reintercepted on ingress, this ID is then used to connect
     ecto sandboxes to the parent test PID
 
-  This library implements Multiverses-aware versions of several constructs
-  in the Elixir Standard Library which aren't natively Multiversable.
+  This library irresponsibly abuses macros to implement Multiverses-aware
+  versions of several constructs in the Elixir Standard Library which aren't
+  natively Multiversable.
+
+  Why are macros necessary?
+  1.  This entire library should be compile-time-only.  We don't want any of
+      this dreck polluting runtime.
+  2.  Ideally, support for this pattern would be available in the Elixir
+      standard library out of the box (possibly with options), and the hope
+      is that this library can be deprecated altogether.
+  3.  You should be able to read code, reason about it, and most of the time
+      stay in your universe and not worry that Multiverses exist at test time.
 
   For plugins that are provided for other systems, see the libraries:
 
@@ -51,7 +61,7 @@ defmodule Multiverses do
   - `:with` the names of multiverse modules you'd like to use.  May be a single module
     or a list of modules.  Is identical to `require Multiverses.<module>; alias Multiverses.<module>`.
   - `:otp_app` the otp_app must have its :use_multiverses application environment
-    variable set in order to be used.
+    variable set in order to be used.  Defaults to autodetecting via Mix.
   """
 
   @opaque link :: [pid]

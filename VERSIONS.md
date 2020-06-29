@@ -39,3 +39,4 @@
 ## 0.5.0
 
 - changes GenServer so that it uses the `forward_callers: true` semantic.
+- adds Multiverses.Application
