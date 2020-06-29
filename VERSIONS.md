@@ -35,3 +35,7 @@
 ## 0.4.3
 
 - adds explicit import statements scoped to the quoted parts
+
+## 0.5.0
+
+- changes GenServer so that it uses the `forward_callers: true` semantic.
