@@ -133,6 +133,7 @@ defmodule Multiverses.Registry do
 
     if use_multiverses? do
       quote do
+        require Multiverses
         {:via, Registry, {unquote(reg), {Multiverses.self(), unquote(key)}}}
       end
     else
