@@ -31,3 +31,7 @@
 
 - adds `Multiverses.overrides?/2` for compile-time checking of
   multiverse overridden modules.
+
+## 0.4.3
+
+- adds explicit import statements scoped to the quoted parts
