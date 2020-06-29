@@ -7,10 +7,10 @@ defmoduler MultiversesTest.GenServerTest do
 
   test "multiverse gen_servers are correctly branded" do
     test_pid = self()
-    {:ok, srv} = TestServer.start_link(nil)
+    {:ok, srv} = TestServer.start_link(forward_callers: true)
 
     inner_universe = spawn fn ->
-      {:ok, inner_srv} = TestServer.start_link(nil)
+      {:ok, inner_srv} = TestServer.start_link(forward_callers: true)
       send(test_pid, {:inner_srv, TestServer.get_universe(inner_srv)})
     end
 

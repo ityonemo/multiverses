@@ -1,8 +1,9 @@
 defmodule MultiversesTest.BasicGenServer do
-  use Multiverses.GenServer
+  use Multiverses, with: GenServer
+  use GenServer
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, :state)
+  def start_link(options) do
+    GenServer.start_link(__MODULE__, :state, options)
   end
 
   @impl true

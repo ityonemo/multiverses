@@ -20,15 +20,14 @@ defmoduler MultiversesTest.DynamicSupervisor.UsingTest do
 
   use Multiverses, with: DynamicSupervisor
 
-  @tag :one
   test "multiverse dynamic supervisors label genservers correctly" do
     test_pid = self()
     {:ok, sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
 
-    {:ok, outer_child} = DynamicSupervisor.start_child(sup, TestServer)
+    {:ok, outer_child} = DynamicSupervisor.start_child(sup, {TestServer, forward_callers: true})
 
     inner_universe = spawn fn ->
-      {:ok, inner_child} = DynamicSupervisor.start_child(sup, TestServer)
+      {:ok, inner_child} = DynamicSupervisor.start_child(sup, {TestServer, forward_callers: true})
 
       send(test_pid, {:inner_child, inner_child})
       receive do :hold -> :open end

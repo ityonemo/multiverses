@@ -1,17 +1,39 @@
 defmodule Multiverses.GenServer do
 
   @moduledoc """
-  This module is intended to be a drop-in replacement for `GenServer`.
+  This module is intended to be a drop-in replacement for `use GenServer`.
+  Note that this is different from other modules.
 
-  When a GenServer process is created by this module, it inherits the
-  callers chain of its parent, in the same way that
+  ## Usage
+
+  ```
+  defmodule MyModule do
+
+    use Multiverses, with: GenServer
+    use GenServer
+
+    def start_link(...) do
+      GenServer.start_link(__MODULE__, init, forward_callers: true)
+    end
+
+    #
+    # standard GenServer code.
+    #
+
+  end
+  ```
+
+  The Multiverses.GenServer implementation introduces a `:forward_callers`
+  option into the GenServer init, setting this to true, allows the
+  GenServer to inherit the callers chain of its caller.  This is compatible
+  with `Multiverses.DynamicSupervisor`.
 
   ## Important:
 
   Typically you won't want GenServers to default to be part of a multiverse
   shard, as they generally represent stateful persistent internal services.
-  If the service can exist before and after the test, then you should NOT
-  use this module.
+  If the service can exist before and after the test, then you should
+  consider NOT using this module.
 
   ## When you should use this module:
 
@@ -30,13 +52,10 @@ defmodule Multiverses.GenServer do
 
   defmacro __using__(opts) do
 
-    multiverse_opts = Macro.escape(opts) ++ [with: GenServer]
-    gen_server_opts = opts |> Keyword.drop([:otp_app]) |> Macro.escape
+    gen_server_opts = Macro.escape(opts)
 
     quote do
       @behaviour GenServer
-
-      use Multiverses, unquote(multiverse_opts)
 
       # inject a startup function equivalent to GenServer's do_start.
       # note that, here we're going to inject a custom "init_it" function
@@ -77,9 +96,12 @@ defmodule Multiverses.GenServer do
       # lets us identify the correct, sharded universe.
 
       @doc false
-      def init_it(starter, self_param, name, mod, args, options) do
-        Multiverses.port(options[:callers])
-        :gen_server.init_it(starter, self_param, name, mod, args, options)
+      def init_it(starter, self_param, name, mod, args, options!) do
+        if options![:forward_callers] do
+          Multiverses.port(options![:callers])
+        end
+        options! = Keyword.delete(options!, :forward_callers)
+        :gen_server.init_it(starter, self_param, name, mod, args, options!)
       end
 
       # implements child_spec in the same way that GenServer does.
