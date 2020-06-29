@@ -2,7 +2,7 @@ defmodule Multiverses.Application do
   @moduledoc """
   This module is intended to be a drop-in replacement for `Application`.
 
-  When you drop this module in, fnctions relating to runtime environment
+  When you drop this module in, functions relating to runtime environment
   variables have been substituted with equivalent macros that respect the
   Multiverse pattern.
 

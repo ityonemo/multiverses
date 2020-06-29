@@ -3,6 +3,10 @@ defmodule Multiverses.Registry do
   This module is intended to be a drop-in replacement for `Registry`, though
   currently not all functionality is implemented.
 
+  If universes are active, keys in the Registry will be `{universe, key}`
+  instead of the normal `key`.  A convenience `via/2` macro has been
+  provided, which will substitute this in correctly.
+
   Unimplemented functionality:
   - `count_match/3,4`
   - `match/3,4`
@@ -122,6 +126,21 @@ defmodule Multiverses.Registry do
     Registry.update_value(registry, {Multiverses.self(), key}, callback)
   end
 
+  @doc """
+  generates the correct via term to call this registry.
+
+  if `:use_multiverses` is activated, then the via term will look like:
+
+  ```elixir
+  {:via, Registry, {reg, {universe, key}}}
+  ```
+
+  If it's not, the via term will look like:
+
+  ```elixir
+  {:via, Registry, {reg, key}}
+  ```
+  """
   defmacro via(reg, key) do
     this_app = Mix.Project.get
     |> apply(:project, [])
