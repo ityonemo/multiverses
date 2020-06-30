@@ -40,3 +40,7 @@
 
 - changes GenServer so that it uses the `forward_callers: true` semantic.
 - adds Multiverses.Application
+
+## 0.5.1
+
+- silences Multiverse.GenServer dialyzer warnings
