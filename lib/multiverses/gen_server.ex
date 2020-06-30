@@ -79,14 +79,20 @@ defmodule Multiverses.GenServer do
             :gen.start(__MODULE__, link, tuple, module, init_arg, opts ++ portal)
 
           {other, _} ->
-            raise ArgumentError, """
-            expected :name option to be one of the following:
-              * nil
-              * atom
-              * {:global, term}
-              * {:via, module, term}
-            Got: #{inspect(other)}
-            """
+            # trick dialyzer into not complaining about non-local returns.
+            case :erlang.phash2(1, 1) do
+              0 ->
+                raise ArgumentError, """
+                expected :name option to be one of the following:
+                  * nil
+                  * atom
+                  * {:global, term}
+                  * {:via, module, term}
+                Got: #{inspect(other)}
+                """
+              1 ->
+                :ignore
+            end
         end
       end
 
