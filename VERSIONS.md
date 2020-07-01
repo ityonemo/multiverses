@@ -43,4 +43,8 @@
 
 ## 0.5.1
 
-- silences Multiverse.GenServer dialyzer warnings
+- silences Multiverses.GenServer dialyzer warnings
+
+## 0.5.2
+
+- adds support for Multiverses.Supervisor
