@@ -73,8 +73,21 @@ defmodule Multiverses do
       |> Keyword.get(:app)
     end)
 
+    if in_multiverse?(otp_app) do
+      using_multiverses(otp_app, __CALLER__, options)
+    else
+      empty_aliases(__CALLER__, options)
+    end
+  end
+
+  defp in_multiverse?(otp_app) do
+    (otp_app == :multiverses) && (Mix.env == :test) ||
+      Application.get_env(otp_app, :use_multiverses, false)
+  end
+
+  defp using_multiverses(otp_app, caller, options) do
     Module.register_attribute(
-      __CALLER__.module,
+      caller.module,
       :active_modules,
       accumulate: true)
 
@@ -84,20 +97,33 @@ defmodule Multiverses do
     end | Keyword.get(options, :with, [])
     |> List.wrap
     |> Enum.map(fn module_ast ->
-      parent_module = Macro.expand(module_ast, __CALLER__)
-      multiverse_module = Module.concat(Multiverses, parent_module)
+      parent_module = Macro.expand(module_ast, caller)
+      multiverses_module = Module.concat(Multiverses, parent_module)
 
       Module.put_attribute(
-        __CALLER__.module,
+        caller.module,
         :active_modules,
         parent_module)
 
       quote do
-        require unquote(multiverse_module)
-        alias unquote(multiverse_module)
+        require unquote(multiverses_module)
+        alias unquote(multiverses_module)
       end
     end)]
   end
+
+  defp empty_aliases(caller, options) do
+    options
+    |> Keyword.get(:with, [])
+    |> List.wrap
+    |> Enum.map(fn module_ast ->
+      native_module = Macro.expand(module_ast, caller)
+      quote do
+        alias unquote(native_module)
+      end
+    end)
+  end
+
 
   @doc """
   generates a "link" to current universe.  If you pass the result of "link"
