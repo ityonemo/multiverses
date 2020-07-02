@@ -1,4 +1,6 @@
 defmodule MultiversesTest.BasicGenServer do
+  @moduledoc false
+
   use Multiverses, with: GenServer
   use GenServer
 

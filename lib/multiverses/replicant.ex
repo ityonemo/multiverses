@@ -1,10 +1,20 @@
 defmodule MultiversesTest.Replicant do
-  @doc """
+  @moduledoc """
   allows you to replicate test module multiple times, forcing them to
   be run concurrently.  This helps prove that the system can be run
   in parallel without issue.
+
+  you should set the replication level with the REPLICATION environment
+  variable, for example:
+
+  ```shell
+  REPLICATION=10 mix test
+  ```
   """
 
+  @doc """
+  use in place of `defmodule/2` for any test you'd like replicated.
+  """
   defmacro defmoduler(module, do: do_block) do
     module = Macro.expand(module, __CALLER__)
 

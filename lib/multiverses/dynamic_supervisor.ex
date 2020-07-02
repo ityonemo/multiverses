@@ -34,7 +34,7 @@ defmodule Multiverses.DynamicSupervisor do
   defclone start_child(supervisor, spec) do
     universe = Multiverses.link()
 
-    bootstrap = fn {m,f, a} -> {:erlang, :apply, [
+    bootstrap = fn {m, f, a} -> {:erlang, :apply, [
       fn ->
         Multiverses.port(universe)
         res = :erlang.apply(m, f, a)

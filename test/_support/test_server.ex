@@ -1,4 +1,6 @@
 defmodule MultiversesTest.Registry.TestServer do
+  @moduledoc false
+
   use Multiverses, with: Registry
 
   use GenServer

@@ -1,4 +1,6 @@
 defmodule TestBench do
+  @moduledoc false
+
   @callback foo() :: atom
 end
 
