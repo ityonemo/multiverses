@@ -90,8 +90,6 @@ defmodule Multiverses.Supervisor do
       def init_it(starter, self_param, name, module, args, options!) do
         Multiverses.port(options![:callers])
         options! = Keyword.delete(options!, :callers)
-
-        args |> IO.inspect(label: "95")
         # dirty little secret: Supervisors are just GenServers under the hood.
         :gen_server.init_it(starter, self_param, name, module, args, options!)
       end
