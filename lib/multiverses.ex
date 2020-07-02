@@ -97,13 +97,13 @@ defmodule Multiverses do
     end | Keyword.get(options, :with, [])
     |> List.wrap
     |> Enum.map(fn module_ast ->
-      parent_module = Macro.expand(module_ast, caller)
-      multiverses_module = Module.concat(Multiverses, parent_module)
+      native_module = Macro.expand(module_ast, caller)
+      multiverses_module = Module.concat(Multiverses, native_module)
 
       Module.put_attribute(
         caller.module,
         :active_modules,
-        parent_module)
+        native_module)
 
       quote do
         require unquote(multiverses_module)
@@ -118,7 +118,9 @@ defmodule Multiverses do
     |> List.wrap
     |> Enum.map(fn module_ast ->
       native_module = Macro.expand(module_ast, caller)
+      multiverses_module = Module.concat(Multiverses, native_module)
       quote do
+        require unquote(multiverses_module)
         alias unquote(native_module)
       end
     end)
