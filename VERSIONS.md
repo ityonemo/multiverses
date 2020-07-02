@@ -52,7 +52,4 @@
 ## 0.5.3
 
 - remove stray IO.inspect
-
-## future updates:
-
-- Make Multiverses.active? which checks if Multiverses are active.
+- added Multiverses.active? which checks if Multiverses are active.

@@ -158,4 +158,20 @@ defmodule Multiverses do
     if active_modules, do: parent_module in active_modules, else: false
   end
 
+  @doc """
+  lets you know if the current otp_app has multiverses active.
+
+  Only available at compile time, and only available when compiling
+  with Mix.
+  """
+  defmacro active? do
+    otp_app = Mix.Project.get
+    |> apply(:project, [])
+    |> Keyword.get(:app)
+
+    quote do
+      Application.compile_env(unquote(otp_app), :use_multiverses, false)
+    end
+  end
+
 end
