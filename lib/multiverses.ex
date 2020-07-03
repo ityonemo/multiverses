@@ -120,7 +120,6 @@ defmodule Multiverses do
       native_module = Macro.expand(module_ast, caller)
       multiverses_module = Module.concat(Multiverses, native_module)
       quote do
-        require unquote(multiverses_module)
         alias unquote(native_module)
       end
     end)
