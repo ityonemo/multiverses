@@ -118,13 +118,11 @@ defmodule Multiverses do
     |> List.wrap
     |> Enum.map(fn module_ast ->
       native_module = Macro.expand(module_ast, caller)
-      multiverses_module = Module.concat(Multiverses, native_module)
       quote do
         alias unquote(native_module)
       end
     end)
   end
-
 
   @doc """
   generates a "link" to current universe.  If you pass the result of "link"
