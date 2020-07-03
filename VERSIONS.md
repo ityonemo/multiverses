@@ -54,6 +54,6 @@
 - remove stray IO.inspect
 - added Multiverses.active? which checks if Multiverses are active.
 
-## 0.5.4
+## 0.6.0
 
 - better no-op condition `use Multiverses` directive
