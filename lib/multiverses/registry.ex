@@ -27,7 +27,9 @@ defmodule Multiverses.Registry do
       select: 2
     ]
 
-  defclone count(registry) do
+  require Multiverses
+
+  def count(registry) do
     registry
     |> Registry.select([
       {
@@ -39,11 +41,11 @@ defmodule Multiverses.Registry do
     |> Enum.count()
   end
 
-  defclone dispatch(registry, key, fun, opts \\ []) do
+  def dispatch(registry, key, fun, opts \\ []) do
     Registry.dispatch(registry, {Multiverses.self(), key}, fun, opts)
   end
 
-  defclone keys(registry, pid) do
+  def keys(registry, pid) do
     universe = Multiverses.self()
 
     registry
@@ -53,18 +55,18 @@ defmodule Multiverses.Registry do
     # NB: there shouldn't be any pids that don't match this universe.
   end
 
-  defclone lookup(registry, key) do
+  def lookup(registry, key) do
     Registry.lookup(registry, {Multiverses.self(), key})
   end
 
   @doc """
   Registers the calling process with the Registry.  Works as `Registry.register/3` does.
   """
-  defclone register(registry, key, value) do
+  def register(registry, key, value) do
     Registry.register(registry, {Multiverses.self(), key}, value)
   end
 
-  defclone select(registry, spec) do
+  def select(registry, spec) do
     universe = Multiverses.self()
     new_spec = Enum.map(spec, fn {match, filters, result} ->
       {new_match, match_var} =
@@ -118,11 +120,11 @@ defmodule Multiverses.Registry do
     Registry.select(registry, new_spec)
   end
 
-  defclone unregister(registry, key) do
+  def unregister(registry, key) do
     Registry.unregister(registry, {Multiverses.self(), key})
   end
 
-  defclone update_value(registry, key, callback) do
+  def update_value(registry, key, callback) do
     Registry.update_value(registry, {Multiverses.self(), key}, callback)
   end
 

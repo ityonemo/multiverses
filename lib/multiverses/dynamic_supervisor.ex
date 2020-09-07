@@ -31,7 +31,9 @@ defmodule Multiverses.DynamicSupervisor do
     module: DynamicSupervisor,
     except: [start_child: 2]
 
-  defclone start_child(supervisor, spec) do
+  require Multiverses
+
+  def start_child(supervisor, spec) do
     universe = Multiverses.link()
 
     bootstrap = fn {m, f, a} -> {:erlang, :apply, [

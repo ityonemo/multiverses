@@ -28,47 +28,42 @@ defmodule Multiverses.Application do
              get_env: 2, get_env: 3,
              put_env: 3]
 
-  defmacro universe(key) do
-    quote do
-      require Multiverses
-      {Multiverses.self(), unquote(key)}
-    end
+  defp universe(key) do
+    require Multiverses
+    {Multiverses.self(), key}
   end
 
-  defclone delete_env(app, key) do
-    import Multiverses.Application, only: [universe: 1]
-    case Elixir.Application.fetch_env(app, universe(key)) do
+  def delete_env(app, key) do
+    case Application.fetch_env(app, universe(key)) do
       {:ok, _} ->
-        Elixir.Application.delete_env(app, universe(key))
+        Application.delete_env(app, universe(key))
       :error ->
-        Elixir.Application.put_env(app, universe(key), :"$tombstone")
+        Application.put_env(app, universe(key), :"$tombstone")
     end
   end
 
-  defclone fetch_env(app, key) do
-    import Multiverses.Application, only: [universe: 1]
-    case Elixir.Application.fetch_env(app, universe(key)) do
+  def fetch_env(app, key) do
+    case Application.fetch_env(app, universe(key)) do
       {:ok, :"$tombstone"} -> :error
       result = {:ok, _} -> result
       :error ->
-        Elixir.Application.fetch_env(app, key)
+        Application.fetch_env(app, key)
     end
   end
 
-  defclone fetch_env!(app, key) do
-    import Multiverses.Application, only: [universe: 1]
-    case Elixir.Application.fetch_env(app, universe(key)) do
+  def fetch_env!(app, key) do
+    case Application.fetch_env(app, universe(key)) do
       {:ok, env} -> env
       :error ->
-        Elixir.Application.fetch_env!(app, key)
+        Application.fetch_env!(app, key)
     end
   end
 
-  defclone get_env(app, key) do
+  def get_env(app, key) do
     Multiverses.Application.get_env(app, key, nil)
   end
 
-  defclone get_env(app, key, default) do
+  def get_env(app, key, default) do
     case Multiverses.Application.fetch_env(app, key) do
       {:ok, env} -> env
       :error ->
@@ -77,9 +72,8 @@ defmodule Multiverses.Application do
     end
   end
 
-  defclone put_env(app, key, value) do
-    import Multiverses.Application, only: [universe: 1]
-    Elixir.Application.put_env(app, universe(key), value)
+  def put_env(app, key, value) do
+    Application.put_env(app, universe(key), value)
   end
 
 end
