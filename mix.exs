@@ -27,13 +27,9 @@ defmodule Multiverses.MixProject do
         extras: ["README.md"],
         source_url: "https://github.com/ityonemo/multiverses"
       ],
-      elixirc_paths: elixirc_paths(Mix.env()),
       deps: deps()
     ]
   end
-
-  defp elixirc_paths(:test), do: ["lib", "test/_support"]
-  defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
   def application do

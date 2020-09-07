@@ -81,8 +81,7 @@ defmodule Multiverses do
   end
 
   defp in_multiverse?(otp_app) do
-    (otp_app == :multiverses) && (Mix.env == :test) ||
-      Application.get_env(otp_app, :use_multiverses, false)
+    Application.get_env(otp_app, :use_multiverses, false)
   end
 
   defp using_multiverses(otp_app, caller, options) do
@@ -106,7 +105,6 @@ defmodule Multiverses do
         native_module)
 
       quote do
-        require unquote(multiverses_module)
         alias unquote(multiverses_module)
       end
     end)]
