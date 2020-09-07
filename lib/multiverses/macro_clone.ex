@@ -127,39 +127,12 @@ defmodule Multiverses.MacroClone do
   ## NB This function should be considered "private" and is only public
   ## so that it can be testable.
   def mfa_to_macro(module, {function, arity}) do
-    [mfa_to_doc({module, function, arity}),
-    {:defmacro, [context: Elixir, import: Kernel],
-    [
-      {function, [context: Elixir], arity_to_params(arity)},
-      [do: {:quote, [context: Elixir], [[do: {:__block__, [], [
-        mfa_to_call({module, function, arity})
-      ]}]]}]
-    ]}]
-  end
-
-  @spec mfa_to_call(mfa) :: Macro.t
-  @doc false
-  ## NB This function should be considered "private" and is only public
-  ## so that it can be testable.
-  def mfa_to_call({module, function, arity}) do
-    module_alias = module
-    |> Module.split
-    |> Enum.map(&String.to_atom/1)
-
-    {{:., [], [{:__aliases__, [alias: false], module_alias}, function]}, [],
-    arity_to_params(arity, true)}
-  end
-
-  defp mfa_to_doc({module, function, arity}) do
-    m = module |> Module.split |> Enum.join(".")
-    docstr = "cloned from `#{m}.#{function}/#{arity}`"
-    quote do
-      @doc unquote(docstr)
-    end
+    {:defdelegate, [context: Elixir, import: Kernel],
+      [{function, [], arity_to_params(arity)}, [to: module]]}
   end
 
   defp arity_to_params(arity, unquoted \\ false)
-  defp arity_to_params(0, _), do: []
+  defp arity_to_params(0, _), do: Elixir
   defp arity_to_params(arity, unquoted) do
     wrap = if unquoted, do: &unquoted/1, else: &(&1)
     for idx <- 1..arity do

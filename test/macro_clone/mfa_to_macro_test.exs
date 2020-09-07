@@ -8,12 +8,7 @@ defmodule MultiversesTest.MacroClone.MfaToMacroTest do
   describe "mfa_to_macro/1" do
     test "works on zero arity function" do
       assert formatted("""
-      [@doc("cloned from `Foo.bar/0`"),
-      defmacro(bar()) do
-        quote do
-          Foo.bar()
-        end
-      end]
+      defdelegate(bar, to: Foo)
       """) == Foo
       |> MacroClone.mfa_to_macro({:bar, 0})
       |> Macro.to_string
@@ -22,12 +17,7 @@ defmodule MultiversesTest.MacroClone.MfaToMacroTest do
 
     test "works on one arity function" do
       assert formatted("""
-      [@doc("cloned from `Foo.bar/1`"),
-      defmacro(bar(p1)) do
-        quote do
-          Foo.bar(unquote(p1))
-        end
-      end]
+      defdelegate(bar(p1), to: Foo)
       """) == Foo
       |> MacroClone.mfa_to_macro({:bar, 1})
       |> Macro.to_string
