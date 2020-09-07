@@ -13,7 +13,7 @@ defmodule Multiverses.Registry do
   - `unregister_match/3,4`
   """
 
-  use Multiverses.MacroClone,
+  use Multiverses.Clone,
     module: Registry,
     except: [
       count: 1,

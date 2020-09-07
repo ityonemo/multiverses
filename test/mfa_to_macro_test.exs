@@ -1,7 +1,7 @@
-defmodule MultiversesTest.MacroClone.MfaToMacroTest do
+defmodule MultiversesTest.Clone.MfaToDefdelegateTest do
   use ExUnit.Case, async: true
 
-  alias Multiverses.MacroClone
+  alias Multiverses.Clone
 
   def formatted(code), do: code |> Code.format_string! |> IO.iodata_to_binary
 
@@ -10,7 +10,7 @@ defmodule MultiversesTest.MacroClone.MfaToMacroTest do
       assert formatted("""
       defdelegate(bar, to: Foo)
       """) == Foo
-      |> MacroClone.mfa_to_macro({:bar, 0})
+      |> Clone.mfa_to_defdelegate({:bar, 0})
       |> Macro.to_string
       |> formatted
     end
@@ -19,7 +19,7 @@ defmodule MultiversesTest.MacroClone.MfaToMacroTest do
       assert formatted("""
       defdelegate(bar(p1), to: Foo)
       """) == Foo
-      |> MacroClone.mfa_to_macro({:bar, 1})
+      |> Clone.mfa_to_defdelegate({:bar, 1})
       |> Macro.to_string
       |> formatted
     end

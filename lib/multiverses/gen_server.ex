@@ -41,7 +41,7 @@ defmodule Multiverses.GenServer do
   a cache for state IRL which is tracked in a specific context.
   """
 
-  use Multiverses.MacroClone,
+  use Multiverses.Clone,
     module: GenServer,
     except: [
       start: 2,

@@ -1,20 +1,21 @@
-defmodule Multiverses.MacroClone do
+defmodule Multiverses.Clone do
   @moduledoc """
   allows a module to directly clone all of the public functions of a
   given module, except as macros.
 
   thus multiverse equivalents replicate the functionality of the parent
-  module, except with the equivalents substituted at compile time,
-  allowing multiverse apps to exist as `[runtime: false]` apps.
+  module.  Consider dropping a cloned module into a `test/support`
+  directory so that it can exist as compile-time for test, but not
+  for dev or prod.
 
   ## Usage
 
   In the following example, `FooModule` has all of its functions ported
-  into the current module, except as macros.  The functions `FooModule.foo/3`
+  into the current module as `defdelegate/2`.  The functions `FooModule.foo/3`
   and `FooModule.foo/4` are not, but rather should be ported using `defclone/2`
 
   ```elixir
-  use Multiverses.MacroClone, with: FooModule, except: [
+  use Multiverses.Clone, with: FooModule, except: [
     foo: 3,
     foo: 4
   ]
@@ -27,7 +28,7 @@ defmodule Multiverses.MacroClone do
       raise CompileError,
         file: __CALLER__.file,
         line: __CALLER__.line,
-        description: "MacroClone must have :module and :except options"
+        description: "Clone must have :module and :except options"
     end
 
     module = Macro.expand(opts[:module], __CALLER__)
@@ -38,95 +39,14 @@ defmodule Multiverses.MacroClone do
     :functions
     |> module.__info__
     |> Enum.reject(&(&1 in except))
-    |> Enum.map(&mfa_to_macro(module, &1))
-    |> Kernel.++([quote do
-      import Multiverses.MacroClone, only: [defclone: 2]
-    end])
+    |> Enum.map(&mfa_to_defdelegate(module, &1))
   end
 
-  @spec defclone(Macro.t, Macro.t) :: Macro.t
-  @doc """
-  clones the target function from the parent module (as defined in the `use` statement)
-  as a macro, unless `use Multiverses` has been activated.
-
-  In the case that `use Multiverses` has been activated, the macro takes the value of the
-  contents inside the `defclone` block.
-  """
-  defmacro defclone(header, do: block) do
-    {fun, _, params} = header
-
-    # the cloned macro needs to keep the default values.
-    macro_params = Enum.map(
-      params, fn
-        {:\\, _, [{var, _, _}, default]} ->
-          {:\\, [], [{var, [], Elixir}, default]}
-        {var, _, nil} ->
-          {var, [], Elixir}
-      end)
-
-    # inner functon values don't keep the default values.
-    args = Enum.map(macro_params, fn
-      {:\\, _, [any, _]} -> any
-      any -> any
-    end)
-
-    parent = __CALLER__.module
-    |> Module.get_attribute(:parent_module)
-    |> Module.split
-    |> Enum.map(&String.to_atom/1)
-
-    {:defmacro, [context: Elixir, import: Kernel],
-    [
-      {fun, [context: Elixir], macro_params},
-      [do: clone_body(parent, fun, args, block)]
-    ]}
-  end
-
-  defp clone_body(module, fun, args, block) do
-    quote do
-      this_app = Mix.Project.get
-      |> apply(:project, [])
-      |> Keyword.get(:app)
-
-      use_multiverses? = __CALLER__.module
-      |> Module.get_attribute(:multiverse_otp_app, this_app)
-      |> Application.get_env(:use_multiverses, this_app == :multiverses)
-
-      if use_multiverses? do
-        unquote(block_call(args, block))
-      else
-        unquote(naked_call(module, fun, args))
-      end
-    end
-  end
-
-  defp block_call(args, block) do
-    {:quote, [context: Elixir],
-      [[bind_quoted: bind_args(args)], [do: block]]}
-  end
-
-  defp naked_call(module, fun, args) do
-    call = {
-      {:., [], [{:__aliases__, [alias: false], module}, fun]},
-      [],
-      Enum.map(args, &to_unquoted/1)}
-
-    {:quote, [context: Elixir], [[do: call]]}
-  end
-
-  defp bind_args(args) do
-    Enum.map(args, fn {var, _, _} ->
-      {var, {var, [], Elixir}}
-    end)
-  end
-
-  defp to_unquoted(var), do: {:unquote, [], [var]}
-
-  @spec mfa_to_macro(module, {atom, arity}) :: Macro.t
+  @spec mfa_to_defdelegate(module, {atom, arity}) :: Macro.t
   @doc false
   ## NB This function should be considered "private" and is only public
   ## so that it can be testable.
-  def mfa_to_macro(module, {function, arity}) do
+  def mfa_to_defdelegate(module, {function, arity}) do
     {:defdelegate, [context: Elixir, import: Kernel],
       [{function, [], arity_to_params(arity)}, [to: module]]}
   end

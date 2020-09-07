@@ -21,7 +21,7 @@ defmodule Multiverses.Application do
   and will default the Elixir standard.
   """
 
-  use Multiverses.MacroClone,
+  use Multiverses.Clone,
     module: Application,
     except: [delete_env: 2,
              fetch_env!: 2, fetch_env: 2,

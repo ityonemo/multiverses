@@ -27,7 +27,7 @@ defmodule Multiverses.DynamicSupervisor do
   processes, use `Multiverse.Registry`.
   """
 
-  use Multiverses.MacroClone,
+  use Multiverses.Clone,
     module: DynamicSupervisor,
     except: [start_child: 2]
 

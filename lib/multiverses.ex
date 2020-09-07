@@ -66,17 +66,17 @@ defmodule Multiverses do
 
   @opaque link :: [pid]
 
-  defmacro __using__(options) do
-    otp_app = Keyword.get_lazy(options, :otp_app, fn ->
+  defmacro __using__(options!) do
+    otp_app = Keyword.get_lazy(options!, :otp_app, fn ->
       Mix.Project.get
       |> apply(:project, [])
       |> Keyword.get(:app)
     end)
 
     if in_multiverse?(otp_app) do
-      using_multiverses(otp_app, __CALLER__, options)
+      using_multiverses(otp_app, __CALLER__, options!)
     else
-      empty_aliases(__CALLER__, options)
+      empty_aliases(__CALLER__, options!)
     end
   end
 
@@ -93,21 +93,22 @@ defmodule Multiverses do
     [quote do
       @multiverse_otp_app unquote(otp_app)
       require Multiverses
-    end | Keyword.get(options, :with, [])
-    |> List.wrap
-    |> Enum.map(fn module_ast ->
-      native_module = Macro.expand(module_ast, caller)
-      multiverses_module = Module.concat(Multiverses, native_module)
+     end | options
+         |> Keyword.get(:with, [])
+         |> List.wrap
+         |> Enum.map(fn module_ast ->
+           native_module = Macro.expand(module_ast, caller)
+           multiverses_module = Module.concat(Multiverses, native_module)
 
-      Module.put_attribute(
-        caller.module,
-        :active_modules,
-        native_module)
+           Module.put_attribute(
+             caller.module,
+             :active_modules,
+             native_module)
 
-      quote do
-        alias unquote(multiverses_module)
-      end
-    end)]
+           quote do
+             alias unquote(multiverses_module)
+           end
+         end)]
   end
 
   defp empty_aliases(caller, options) do

@@ -33,7 +33,7 @@ defmodule Multiverses.Supervisor do
   ```
   """
 
-  use Multiverses.MacroClone,
+  use Multiverses.Clone,
     module: Supervisor,
     except: [start_link: 2, start_link: 3]
 
