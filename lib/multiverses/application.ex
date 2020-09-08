@@ -51,6 +51,7 @@ defmodule Multiverses.Application do
     {Multiverses.self(), key}
   end
 
+  @doc "See `Application.delete_env/2`."
   def delete_env(app, key) do
     case Application.fetch_env(app, universe(key)) do
       {:ok, _} ->
@@ -60,6 +61,7 @@ defmodule Multiverses.Application do
     end
   end
 
+  @doc "See `Application.fetch_env/2`."
   def fetch_env(app, key) do
     case Application.fetch_env(app, universe(key)) do
       {:ok, :"$tombstone"} -> :error
@@ -69,6 +71,7 @@ defmodule Multiverses.Application do
     end
   end
 
+  @doc "See `Application.fetch_env!/2`."
   def fetch_env!(app, key) do
     case Application.fetch_env(app, universe(key)) do
       {:ok, env} -> env
@@ -77,10 +80,12 @@ defmodule Multiverses.Application do
     end
   end
 
+  @doc "See `Application.get_env/2`."
   def get_env(app, key) do
     Multiverses.Application.get_env(app, key, nil)
   end
 
+  @doc "See `Application.get_env/3`."
   def get_env(app, key, default) do
     case Multiverses.Application.fetch_env(app, key) do
       {:ok, env} -> env
@@ -90,6 +95,7 @@ defmodule Multiverses.Application do
     end
   end
 
+  @doc "See `Application.put_env/3`."
   def put_env(app, key, value) do
     Application.put_env(app, universe(key), value)
   end

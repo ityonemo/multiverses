@@ -1,7 +1,7 @@
 defmodule Multiverses.Registry do
   @moduledoc """
-  This module is intended to be a drop-in replacement for `Registry`, though
-  currently not all functionality is implemented.
+  This module is intended to be a drop-in replacement for `Registry`, but
+  not all functionality is implemented.
 
   If universes are active, keys in the Registry will be `{universe, key}`
   instead of the normal `key`.  A convenience `via/2` macro has been
@@ -25,8 +25,8 @@ defmodule Multiverses.Registry do
       unregister: 2,
       update_value: 3,
       select: 2,
-      start_link: 3,
-      start_link: 2,
+      start_link: 3, # these two functions are deprecated.
+      start_link: 2, # these two functions are deprecated.
     ]
 
   require Multiverses

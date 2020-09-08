@@ -55,9 +55,7 @@ defmodule Multiverses.Supervisor do
     end
   end
 
-  @doc """
-  starts a Supervisor, linked to the calling function.
-  """
+  @doc "See `Supervisor.start_link/2`."
   def start_link(module, init_state, opts \\ []) do
     __MODULE__.do_start(:link, module, init_state, opts)
   end

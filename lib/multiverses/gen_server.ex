@@ -71,16 +71,12 @@ defmodule Multiverses.GenServer do
     end
   end
 
-  @doc """
-  starts a GenServer, linked to the calling function.
-  """
+  @doc "See `GenServer.start/3`."
   def start_link(module, init_state, opts \\ []) do
     __MODULE__.do_start(:link, module, init_state, opts)
   end
 
-  @doc """
-  starts a GenServer, linked to the calling function.
-  """
+  @doc "See `GenServer.start_link/3`."
   def start(module, init_state, opts \\ []) do
     __MODULE__.do_start(:nolink, module, init_state, opts)
   end
