@@ -57,3 +57,7 @@
 ## 0.6.0
 
 - better no-op condition `use Multiverses` directive
+
+## 0.7.0
+
+- overhaul away from using macros

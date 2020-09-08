@@ -147,7 +147,7 @@ defmodule Multiverses do
 
   @spec drop() :: link
   @doc """
-  purges the caller list.
+  purges the callers list from the active list
   """
   def drop do
     Process.delete(:"$callers")
