@@ -4,7 +4,7 @@ defmodule Multiverses do
   pattern.  This is a pattern where integration tests are run concurrently
   and each test sees a shard of global state.
 
-  ## Examples:
+  ## Pre-Existing Examples:
 
   - `Mox`: each test has access to the global module mock, sharded by the
     pid of the running test.
@@ -15,23 +15,13 @@ defmodule Multiverses do
     BEAM that is reintercepted on ingress, this ID is then used to connect
     ecto sandboxes to the parent test PID
 
-  This library irresponsibly abuses macros to implement Multiverses-aware
-  versions of several constructs in the Elixir Standard Library which aren't
-  natively Multiversable.
-
-  Why are macros necessary?
-  1.  This entire library should be compile-time-only.  We don't want any of
-      this dreck polluting runtime.
-  2.  Ideally, support for this pattern would be available in the Elixir
-      standard library out of the box (possibly with options), and the hope
-      is that this library can be deprecated altogether.
-  3.  You should be able to read code, reason about it, and most of the time
-      stay in your universe and not worry that Multiverses exist at test time.
+  This library implements Multiverses-aware versions of several constructs
+  in the Elixir Standard Library which aren't natively Multiversable.
 
   For plugins that are provided for other systems, see the libraries:
 
-  - :multiverses_finch  - which extends this to HTTP requests that exit the BEAM.
-  - :multiverses_pubsub - which extends this to Phoenix.PubSub
+  - `:multiverses_finch`  - which extends this to HTTP requests that exit the BEAM.
+  - `:multiverses_pubsub` - which extends this to Phoenix.PubSub
 
   ## Usage
 
@@ -48,9 +38,9 @@ defmodule Multiverses do
   use Multiverses, with: Registry
   ```
 
-  this aliases `Multiverses.Registry` to `Registry` and activates the
-  `Multiverses.Registry` macros across this module.  As an escape hatch, if you
-  need to use the underlying module, you may use the macro alias `Elixir.Registry`
+  this aliases `Multiverses.Registry` to `Registry`.  As an escape hatch, if
+  you must use the underlying module, you may use the macro alias
+  `Elixir.Registry`
 
   If you need more complex choices for when to activate Multiverses (such as system
   environment variables), you should encode those choices directly using logic around
@@ -189,13 +179,16 @@ defmodule Multiverses do
   with Mix.
   """
   defmacro active? do
-    otp_app = Mix.Project.get
+    quote do
+      Application.compile_env(unquote(app()), :use_multiverses, false)
+    end
+  end
+
+  @spec app() :: atom
+  def app do
+    Mix.Project.get
     |> apply(:project, [])
     |> Keyword.get(:app)
-
-    quote do
-      Application.compile_env(unquote(otp_app), :use_multiverses, false)
-    end
   end
 
 end

@@ -13,12 +13,18 @@ defmodule Multiverses.Application do
   staging system that has `:use_multiverses` unset, before deploying code
   that uses this module.
 
-  The functions calls which take options (:timeout, :persist) are not
+  The functions calls which take options (`:timeout`, `:persist`) are not
   supported, since it's likely that if you're using these options, you're
   probably not in a situation where you need multiverses.
 
   For the same reason, `:get_all_env` and `:put_all_env` are not supported
   and will default the Elixir standard.
+
+  ## How it works
+
+  This module works by substituting the `app` atom with the
+  `{multiverse, app}` tuple.  If that tuple isn't found, it falls back
+  on the `app` atom for its ETS table lookup.
   """
 
   use Multiverses.Clone,
@@ -27,6 +33,18 @@ defmodule Multiverses.Application do
              fetch_env!: 2, fetch_env: 2,
              get_env: 2, get_env: 3,
              put_env: 3]
+
+  # we're abusing the application key format, which works because ETS tables
+  # are what back the application environment variables, and the system
+  # tolerates "other terms", even though that's now how they are typespecced
+  # out.
+  @dialyzer {:nowarn_function,
+    delete_env: 2,
+    fetch_env: 2,
+    fetch_env!: 2,
+    get_env: 2,
+    get_env: 3,
+    put_env: 3}
 
   defp universe(key) do
     require Multiverses
@@ -68,7 +86,7 @@ defmodule Multiverses.Application do
       {:ok, env} -> env
       :error ->
         # fall back to the global value.
-        Elixir.Application.get_env(app, key, default)
+        Application.get_env(app, key, default)
     end
   end
 

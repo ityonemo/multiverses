@@ -5,7 +5,7 @@ defmodule Multiverses.Registry do
 
   If universes are active, keys in the Registry will be `{universe, key}`
   instead of the normal `key`.  A convenience `via/2` macro has been
-  provided, which will substitute this in correctly.
+  provided, which will perform this substitution correctly.
 
   Unimplemented functionality:
   - `count_match/3,4`
@@ -24,7 +24,9 @@ defmodule Multiverses.Registry do
       register: 3,
       unregister: 2,
       update_value: 3,
-      select: 2
+      select: 2,
+      start_link: 3,
+      start_link: 2,
     ]
 
   require Multiverses
@@ -144,9 +146,7 @@ defmodule Multiverses.Registry do
   ```
   """
   defmacro via(reg, key) do
-    this_app = Mix.Project.get
-    |> apply(:project, [])
-    |> Keyword.get(:app)
+    this_app = Multiverses.app()
 
     use_multiverses? = __CALLER__.module
     |> Module.get_attribute(:multiverse_otp_app, this_app)

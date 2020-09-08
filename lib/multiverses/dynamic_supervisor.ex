@@ -48,7 +48,7 @@ defmodule Multiverses.DynamicSupervisor do
     child = spec
     |> fn
       {_, _, _, _, _, _} -> spec
-      any -> Supervisor.child_spec(spec, [])
+      _any -> Supervisor.child_spec(spec, [])
     end.()
     |> fn
       {_, mfa, restart, shutdown, type, modules} ->
