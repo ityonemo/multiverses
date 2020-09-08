@@ -64,7 +64,7 @@ by adding `multiverses` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:multiverses, "~> 0.7.0", only: :test}
+    {:multiverses, "~> 0.7.0", runtime: (Mix.env() == :test)}
   ]
 end
 ```

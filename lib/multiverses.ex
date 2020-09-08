@@ -28,7 +28,7 @@ defmodule Multiverses do
   In `mix.exs`, you should add the following directive:
 
   ```
-  {:multiverses, "~> #{Multiverses.MixProject.version}", runtime: false}
+  {:multiverses, "~> #{Multiverses.MixProject.version}", runtime: (Mix.env() == :test)}}
   ```
 
   In your module where you'll be using at least one multiverse module, use the
