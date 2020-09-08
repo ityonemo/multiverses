@@ -35,6 +35,9 @@ defmodule Multiverses.DynamicSupervisor do
 
   @doc "See `DynamicSupervisor.start_child/2`."
   def start_child(supervisor, spec) do
+    # works by injecting a different supervisor bootstrap *through* the
+    # custom `bootstrap/2` function provided in this module.
+
     child = spec
     |> to_spec_tuple
     |> inject_bootstrap(Multiverses.link())
@@ -66,6 +69,7 @@ defmodule Multiverses.DynamicSupervisor do
     {bootstrap_for(spec_map.start, link), restart, shutdown, type, modules}
   end
 
+  @doc false
   def bootstrap({m, f, a}, universe) do
     Multiverses.port(universe)
     res = :erlang.apply(m, f, a)
