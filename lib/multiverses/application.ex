@@ -13,73 +13,91 @@ defmodule Multiverses.Application do
   staging system that has `:use_multiverses` unset, before deploying code
   that uses this module.
 
-  The functions calls which take options (:timeout, :persist) are not
+  The functions calls which take options (`:timeout`, `:persist`) are not
   supported, since it's likely that if you're using these options, you're
   probably not in a situation where you need multiverses.
 
   For the same reason, `:get_all_env` and `:put_all_env` are not supported
   and will default the Elixir standard.
+
+  ## How it works
+
+  This module works by substituting the `app` atom with the
+  `{multiverse, app}` tuple.  If that tuple isn't found, it falls back
+  on the `app` atom for its ETS table lookup.
   """
 
-  use Multiverses.MacroClone,
+  use Multiverses.Clone,
     module: Application,
     except: [delete_env: 2,
              fetch_env!: 2, fetch_env: 2,
              get_env: 2, get_env: 3,
              put_env: 3]
 
-  defmacro universe(key) do
-    quote do
-      require Multiverses
-      {Multiverses.self(), unquote(key)}
-    end
+  # we're abusing the application key format, which works because ETS tables
+  # are what back the application environment variables, and the system
+  # tolerates "other terms", even though that's now how they are typespecced
+  # out.
+  @dialyzer {:nowarn_function,
+    delete_env: 2,
+    fetch_env: 2,
+    fetch_env!: 2,
+    get_env: 2,
+    get_env: 3,
+    put_env: 3}
+
+  defp universe(key) do
+    require Multiverses
+    {Multiverses.self(), key}
   end
 
-  defclone delete_env(app, key) do
-    import Multiverses.Application, only: [universe: 1]
-    case Elixir.Application.fetch_env(app, universe(key)) do
+  @doc "See `Application.delete_env/2`."
+  def delete_env(app, key) do
+    case Application.fetch_env(app, universe(key)) do
       {:ok, _} ->
-        Elixir.Application.delete_env(app, universe(key))
+        Application.delete_env(app, universe(key))
       :error ->
-        Elixir.Application.put_env(app, universe(key), :"$tombstone")
+        Application.put_env(app, universe(key), :"$tombstone")
     end
   end
 
-  defclone fetch_env(app, key) do
-    import Multiverses.Application, only: [universe: 1]
-    case Elixir.Application.fetch_env(app, universe(key)) do
+  @doc "See `Application.fetch_env/2`."
+  def fetch_env(app, key) do
+    case Application.fetch_env(app, universe(key)) do
       {:ok, :"$tombstone"} -> :error
       result = {:ok, _} -> result
       :error ->
-        Elixir.Application.fetch_env(app, key)
+        Application.fetch_env(app, key)
     end
   end
 
-  defclone fetch_env!(app, key) do
-    import Multiverses.Application, only: [universe: 1]
-    case Elixir.Application.fetch_env(app, universe(key)) do
+  @doc "See `Application.fetch_env!/2`."
+  def fetch_env!(app, key) do
+    case Application.fetch_env(app, universe(key)) do
       {:ok, env} -> env
       :error ->
-        Elixir.Application.fetch_env!(app, key)
+        Application.fetch_env!(app, key)
     end
   end
 
-  defclone get_env(app, key) do
+  @doc "See `Application.get_env/2`."
+  def get_env(app, key) do
     Multiverses.Application.get_env(app, key, nil)
   end
 
-  defclone get_env(app, key, default) do
+  @doc "See `Application.get_env/3`."
+  def get_env(app, key, default) do
     case Multiverses.Application.fetch_env(app, key) do
       {:ok, env} -> env
       :error ->
         # fall back to the global value.
-        Elixir.Application.get_env(app, key, default)
+        Application.get_env(app, key, default)
     end
   end
 
-  defclone put_env(app, key, value) do
-    import Multiverses.Application, only: [universe: 1]
-    Elixir.Application.put_env(app, universe(key), value)
+  @doc "See `Application.put_env/3`."
+  def put_env(app, key, value) do
+    Application.put_env(app, universe(key), value)
   end
 
 end

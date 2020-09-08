@@ -1,11 +1,11 @@
 defmodule Multiverses.Registry do
   @moduledoc """
-  This module is intended to be a drop-in replacement for `Registry`, though
-  currently not all functionality is implemented.
+  This module is intended to be a drop-in replacement for `Registry`, but
+  not all functionality is implemented.
 
   If universes are active, keys in the Registry will be `{universe, key}`
   instead of the normal `key`.  A convenience `via/2` macro has been
-  provided, which will substitute this in correctly.
+  provided, which will perform this substitution correctly.
 
   Unimplemented functionality:
   - `count_match/3,4`
@@ -13,7 +13,7 @@ defmodule Multiverses.Registry do
   - `unregister_match/3,4`
   """
 
-  use Multiverses.MacroClone,
+  use Multiverses.Clone,
     module: Registry,
     except: [
       count: 1,
@@ -24,10 +24,14 @@ defmodule Multiverses.Registry do
       register: 3,
       unregister: 2,
       update_value: 3,
-      select: 2
+      select: 2,
+      start_link: 3, # these two functions are deprecated.
+      start_link: 2, # these two functions are deprecated.
     ]
 
-  defclone count(registry) do
+  require Multiverses
+
+  def count(registry) do
     registry
     |> Registry.select([
       {
@@ -39,11 +43,11 @@ defmodule Multiverses.Registry do
     |> Enum.count()
   end
 
-  defclone dispatch(registry, key, fun, opts \\ []) do
+  def dispatch(registry, key, fun, opts \\ []) do
     Registry.dispatch(registry, {Multiverses.self(), key}, fun, opts)
   end
 
-  defclone keys(registry, pid) do
+  def keys(registry, pid) do
     universe = Multiverses.self()
 
     registry
@@ -53,18 +57,18 @@ defmodule Multiverses.Registry do
     # NB: there shouldn't be any pids that don't match this universe.
   end
 
-  defclone lookup(registry, key) do
+  def lookup(registry, key) do
     Registry.lookup(registry, {Multiverses.self(), key})
   end
 
   @doc """
   Registers the calling process with the Registry.  Works as `Registry.register/3` does.
   """
-  defclone register(registry, key, value) do
+  def register(registry, key, value) do
     Registry.register(registry, {Multiverses.self(), key}, value)
   end
 
-  defclone select(registry, spec) do
+  def select(registry, spec) do
     universe = Multiverses.self()
     new_spec = Enum.map(spec, fn {match, filters, result} ->
       {new_match, match_var} =
@@ -118,11 +122,11 @@ defmodule Multiverses.Registry do
     Registry.select(registry, new_spec)
   end
 
-  defclone unregister(registry, key) do
+  def unregister(registry, key) do
     Registry.unregister(registry, {Multiverses.self(), key})
   end
 
-  defclone update_value(registry, key, callback) do
+  def update_value(registry, key, callback) do
     Registry.update_value(registry, {Multiverses.self(), key}, callback)
   end
 
@@ -142,9 +146,7 @@ defmodule Multiverses.Registry do
   ```
   """
   defmacro via(reg, key) do
-    this_app = Mix.Project.get
-    |> apply(:project, [])
-    |> Keyword.get(:app)
+    this_app = Multiverses.app()
 
     use_multiverses? = __CALLER__.module
     |> Module.get_attribute(:multiverse_otp_app, this_app)

@@ -4,7 +4,7 @@ defmodule Multiverses do
   pattern.  This is a pattern where integration tests are run concurrently
   and each test sees a shard of global state.
 
-  ## Examples:
+  ## Pre-Existing Examples:
 
   - `Mox`: each test has access to the global module mock, sharded by the
     pid of the running test.
@@ -15,23 +15,13 @@ defmodule Multiverses do
     BEAM that is reintercepted on ingress, this ID is then used to connect
     ecto sandboxes to the parent test PID
 
-  This library irresponsibly abuses macros to implement Multiverses-aware
-  versions of several constructs in the Elixir Standard Library which aren't
-  natively Multiversable.
-
-  Why are macros necessary?
-  1.  This entire library should be compile-time-only.  We don't want any of
-      this dreck polluting runtime.
-  2.  Ideally, support for this pattern would be available in the Elixir
-      standard library out of the box (possibly with options), and the hope
-      is that this library can be deprecated altogether.
-  3.  You should be able to read code, reason about it, and most of the time
-      stay in your universe and not worry that Multiverses exist at test time.
+  This library implements Multiverses-aware versions of several constructs
+  in the Elixir Standard Library which aren't natively Multiversable.
 
   For plugins that are provided for other systems, see the libraries:
 
-  - :multiverses_finch  - which extends this to HTTP requests that exit the BEAM.
-  - :multiverses_pubsub - which extends this to Phoenix.PubSub
+  - `:multiverses_finch`  - which extends this to HTTP requests that exit the BEAM.
+  - `:multiverses_pubsub` - which extends this to Phoenix.PubSub
 
   ## Usage
 
@@ -48,9 +38,9 @@ defmodule Multiverses do
   use Multiverses, with: Registry
   ```
 
-  this aliases `Multiverses.Registry` to `Registry` and activates the
-  `Multiverses.Registry` macros across this module.  As an escape hatch, if you
-  need to use the underlying module, you may use the macro alias `Elixir.Registry`
+  this aliases `Multiverses.Registry` to `Registry`.  As an escape hatch, if
+  you must use the underlying module, you may use the macro alias
+  `Elixir.Registry`
 
   If you need more complex choices for when to activate Multiverses (such as system
   environment variables), you should encode those choices directly using logic around
@@ -64,25 +54,29 @@ defmodule Multiverses do
     variable set in order to be used.  Defaults to autodetecting via Mix.
   """
 
+  import Kernel, except: [self: 0]
+
+  @typedoc """
+  a token that allows one to link with a universe
+  """
   @opaque link :: [pid]
 
-  defmacro __using__(options) do
-    otp_app = Keyword.get_lazy(options, :otp_app, fn ->
+  defmacro __using__(options!) do
+    otp_app = Keyword.get_lazy(options!, :otp_app, fn ->
       Mix.Project.get
       |> apply(:project, [])
       |> Keyword.get(:app)
     end)
 
     if in_multiverse?(otp_app) do
-      using_multiverses(otp_app, __CALLER__, options)
+      using_multiverses(otp_app, __CALLER__, options!)
     else
-      empty_aliases(__CALLER__, options)
+      empty_aliases(__CALLER__, options!)
     end
   end
 
   defp in_multiverse?(otp_app) do
-    (otp_app == :multiverses) && (Mix.env == :test) ||
-      Application.get_env(otp_app, :use_multiverses, false)
+    Application.get_env(otp_app, :use_multiverses, false)
   end
 
   defp using_multiverses(otp_app, caller, options) do
@@ -94,22 +88,22 @@ defmodule Multiverses do
     [quote do
       @multiverse_otp_app unquote(otp_app)
       require Multiverses
-    end | Keyword.get(options, :with, [])
-    |> List.wrap
-    |> Enum.map(fn module_ast ->
-      native_module = Macro.expand(module_ast, caller)
-      multiverses_module = Module.concat(Multiverses, native_module)
+     end | options
+         |> Keyword.get(:with, [])
+         |> List.wrap
+         |> Enum.map(fn module_ast ->
+           native_module = Macro.expand(module_ast, caller)
+           multiverses_module = Module.concat(Multiverses, native_module)
 
-      Module.put_attribute(
-        caller.module,
-        :active_modules,
-        native_module)
+           Module.put_attribute(
+             caller.module,
+             :active_modules,
+             native_module)
 
-      quote do
-        require unquote(multiverses_module)
-        alias unquote(multiverses_module)
-      end
-    end)]
+           quote do
+             alias unquote(multiverses_module)
+           end
+         end)]
   end
 
   defp empty_aliases(caller, options) do
@@ -124,43 +118,39 @@ defmodule Multiverses do
     end)
   end
 
+  @spec link() :: link
   @doc """
   generates a "link" to current universe.  If you pass the result of "link"
   to `port/1`, then it will bring the ported process into the universe of
   the process that called `link/0`
   """
-  defmacro link do
-    quote do
-      [self() | Process.get(:"$callers", [])]
-    end
+  def link do
+    [Kernel.self() | Process.get(:"$callers", [])]
   end
 
+  @spec port(link) :: link
   @doc """
   causes the current process to adopt the universe referred to by the result
   of a `link/0` call.
   """
-  defmacro port(callers) do
-    quote do
-      Process.put(:"$callers", unquote(callers))
-    end
+  def port(callers) do
+    Process.put(:"$callers", callers)
   end
 
+  @spec self() :: pid
   @doc """
   identifies the universe of the current process.
   """
-  defmacro self do
-    quote do
-      :"$callers" |> Process.get([self()]) |> List.last
-    end
+  def self do
+    :"$callers" |> Process.get([Kernel.self()]) |> List.last
   end
 
+  @spec drop() :: link
   @doc """
-  purges the caller list.
+  purges the callers list from the active list
   """
-  defmacro drop do
-    quote do
-      Process.delete(:"$callers")
-    end
+  def drop do
+    Process.delete(:"$callers")
   end
 
   @spec overrides?(module, module) :: boolean
@@ -190,13 +180,18 @@ defmodule Multiverses do
   with Mix.
   """
   defmacro active? do
-    otp_app = Mix.Project.get
+    quote do
+      Application.compile_env(unquote(app()), :use_multiverses, false)
+    end
+  end
+
+  @doc false
+  # used internally to determine which app this this belongs to
+  @spec app() :: atom
+  def app do
+    Mix.Project.get
     |> apply(:project, [])
     |> Keyword.get(:app)
-
-    quote do
-      Application.compile_env(unquote(otp_app), :use_multiverses, false)
-    end
   end
 
 end

@@ -1,7 +1,7 @@
 defmodule Multiverses.MixProject do
   use Mix.Project
 
-  def version, do: "0.6.0"
+  def version, do: "0.7.0"
 
   def project do
     [
@@ -27,13 +27,10 @@ defmodule Multiverses.MixProject do
         extras: ["README.md"],
         source_url: "https://github.com/ityonemo/multiverses"
       ],
-      elixirc_paths: elixirc_paths(Mix.env()),
+      dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"],
       deps: deps()
     ]
   end
-
-  defp elixirc_paths(:test), do: ["lib", "test/_support"]
-  defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
   def application do
@@ -50,7 +47,7 @@ defmodule Multiverses.MixProject do
       {:credo, "~> 1.3", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test, runtime: false},
       {:ex_doc, "~> 0.21.2", only: :dev, runtime: false},
-      {:dialyxir, "~> 0.5.1", only: :dev, runtime: false}
+      {:dialyxir, "~> 1.0", only: :dev, runtime: false}
     ]
   end
 end
