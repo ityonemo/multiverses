@@ -56,6 +56,9 @@ defmodule Multiverses do
 
   import Kernel, except: [self: 0]
 
+  @typedoc """
+  a token that allows one to link with a universe
+  """
   @opaque link :: [pid]
 
   defmacro __using__(options!) do
