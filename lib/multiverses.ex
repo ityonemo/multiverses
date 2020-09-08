@@ -54,6 +54,8 @@ defmodule Multiverses do
     variable set in order to be used.  Defaults to autodetecting via Mix.
   """
 
+  import Kernel, except: [self: 0]
+
   @opaque link :: [pid]
 
   defmacro __using__(options!) do
@@ -113,43 +115,39 @@ defmodule Multiverses do
     end)
   end
 
+  @spec link() :: link
   @doc """
   generates a "link" to current universe.  If you pass the result of "link"
   to `port/1`, then it will bring the ported process into the universe of
   the process that called `link/0`
   """
-  defmacro link do
-    quote do
-      [self() | Process.get(:"$callers", [])]
-    end
+  def link do
+    [Kernel.self() | Process.get(:"$callers", [])]
   end
 
+  @spec port(link) :: link
   @doc """
   causes the current process to adopt the universe referred to by the result
   of a `link/0` call.
   """
-  defmacro port(callers) do
-    quote do
-      Process.put(:"$callers", unquote(callers))
-    end
+  def port(callers) do
+    Process.put(:"$callers", callers)
   end
 
+  @spec self() :: pid
   @doc """
   identifies the universe of the current process.
   """
-  defmacro self do
-    quote do
-      :"$callers" |> Process.get([self()]) |> List.last
-    end
+  def self do
+    :"$callers" |> Process.get([Kernel.self()]) |> List.last
   end
 
+  @spec drop() :: link
   @doc """
   purges the caller list.
   """
-  defmacro drop do
-    quote do
-      Process.delete(:"$callers")
-    end
+  def drop do
+    Process.delete(:"$callers")
   end
 
   @spec overrides?(module, module) :: boolean
@@ -184,6 +182,8 @@ defmodule Multiverses do
     end
   end
 
+  @doc false
+  # used internally to determine which app this this belongs to
   @spec app() :: atom
   def app do
     Mix.Project.get
