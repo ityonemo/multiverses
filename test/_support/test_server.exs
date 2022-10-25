@@ -1,7 +1,7 @@
 defmodule MultiversesTest.Registry.TestServer do
   @moduledoc false
 
-  use Multiverses, with: Registry
+  @registr Multiverses.Registry
 
   use GenServer
 
@@ -12,7 +12,7 @@ defmodule MultiversesTest.Registry.TestServer do
 
   def init({reg, name, link}) do
     Multiverses.port(link)
-    Registry.register(reg, name, nil)
+    @registry.register(reg, name, nil)
     {:ok, name}
   end
 
@@ -21,11 +21,11 @@ defmodule MultiversesTest.Registry.TestServer do
   def update(reg, srv, val), do: GenServer.call(srv, {:update, reg, val})
 
   def handle_call({:unregister, reg}, _, name) do
-    Registry.unregister(reg, name)
+    @registry.unregister(reg, name)
     {:reply, :ok, name}
   end
   def handle_call({:update, reg, val}, _, name) do
-    Registry.update_value(reg, name, val)
+    @registry.update_value(reg, name, val)
     {:reply, :ok, name}
   end
 end

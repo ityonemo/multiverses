@@ -1,7 +1,7 @@
 defmodule Multiverses.MixProject do
   use Mix.Project
 
-  def version, do: "0.7.0"
+  def version, do: "0.8.0"
 
   def project do
     [
@@ -27,22 +27,21 @@ defmodule Multiverses.MixProject do
         extras: ["README.md"],
         source_url: "https://github.com/ityonemo/multiverses"
       ],
+      start_permanent: Mix.env() == :prod,
       dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"],
       deps: deps()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      mod: {Multiverses.AppSupervisor, []}
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # build, testing, and analysis tools
       {:mox, "~> 0.5", only: :test},
       {:credo, "~> 1.3", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.11", only: :test, runtime: false},

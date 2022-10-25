@@ -1,7 +1,8 @@
 import MultiversesTest.Replicant
 
 defmodule MultiversesTest.Supervisor do
-  use Multiverses, with: Supervisor
+  @supervisor Multiverse.Supervisor
+  
   use Supervisor
 
   alias MultiversesTest.BasicGenServer, as: TestServer

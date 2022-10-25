@@ -1,11 +1,11 @@
 defmodule MultiversesTest.DynamicSupervisor.TestServer do
-
-  use Multiverses
   use GenServer
+
+  @dynamic_supervisor Multiverses.DynamicSupervisor
 
   def start_supervised(sup) do
     link = Multiverses.link()
-    DynamicSupervisor.start_child(sup, {__MODULE__, link})
+    @dynamic_supervisor.start_child(sup, {__MODULE__, link})
   end
 
   def start_link(link) do
@@ -31,7 +31,8 @@ import MultiversesTest.Replicant
 defmoduler MultiversesTest.DynamicSupervisorTest do
   use ExUnit.Case, async: true
 
-  use Multiverses
+  @dynamic_supervisor Multiverses.DynamicSupervisor
+
   import Mox
 
   alias MultiversesTest.DynamicSupervisor.TestServer
@@ -39,7 +40,7 @@ defmoduler MultiversesTest.DynamicSupervisorTest do
   setup :verify_on_exit!
 
   setup do
-    {:ok, sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
+    {:ok, sup} = @dynamic_supervisor.start_link(strategy: :one_for_one)
     {:ok, sup: sup}
   end
 

@@ -1,7 +1,8 @@
 import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.Registry.KeysTest do
-  use Multiverses, with: Registry
+
+  @registry Multiverses.Registry
 
   use ExUnit.Case, async: true
 
@@ -11,14 +12,14 @@ defmoduler MultiversesTest.Registry.KeysTest do
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom
-    {:ok, _reg} = Registry.start_link(keys: :unique, name: reg)
+    {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
       {:ok, inner_srv} = TestServer.start_link(reg, :foo)
 
-      assert Registry.keys(reg, inner_srv) == [:foo]
+      assert @registry.keys(reg, inner_srv) == [:foo]
 
       send(test_pid, :inner_started)
       receive do :hold_open -> :ok end
@@ -26,6 +27,6 @@ defmoduler MultiversesTest.Registry.KeysTest do
 
     receive do :inner_started -> :ok end
 
-    assert Registry.keys(reg, outer_srv) == [:foo]
+    assert @registry.keys(reg, outer_srv) == [:foo]
   end
 end

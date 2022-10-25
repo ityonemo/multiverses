@@ -39,14 +39,14 @@ defmodule Multiverses.Clone do
     :functions
     |> module.__info__
     |> Enum.reject(&(&1 in except))
-    |> Enum.map(&mfa_to_defdelegate(module, &1))
+    |> Enum.map(&_mfa_to_defdelegate(module, &1))
   end
 
-  @spec mfa_to_defdelegate(module, {atom, arity}) :: Macro.t
+  @spec _mfa_to_defdelegate(module, {atom, arity}) :: Macro.t
   @doc false
   ## NB This function should be considered "private" and is only public
   ## so that it can be testable.
-  def mfa_to_defdelegate(module, {function, arity}) do
+  def _mfa_to_defdelegate(module, {function, arity}) do
     {:defdelegate, [context: Elixir, import: Kernel],
       [{function, [], arity_to_params(arity)}, [to: module]]}
   end

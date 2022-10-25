@@ -1,7 +1,7 @@
 import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.Registry.DispatchTest do
-  use Multiverses, with: Registry
+  @registry Multiverses.Registry
 
   use ExUnit.Case, async: true
 
@@ -11,20 +11,20 @@ defmoduler MultiversesTest.Registry.DispatchTest do
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom
-    {:ok, _reg} = Registry.start_link(keys: :unique, name: reg)
+    {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
-      assert 0 == Registry.count(reg)
+      assert 0 == @registry.count(reg)
 
       {:ok, _} = TestServer.start_link(reg, :foo)
 
-      assert 1 == Registry.count(reg)
+      assert 1 == @registry.count(reg)
 
       send(test_pid, :inner_started)
 
-      Registry.dispatch(reg, :foo, fn entries ->
+      @registry.dispatch(reg, :foo, fn entries ->
         send(test_pid, {:inner_entries, entries})
       end)
 

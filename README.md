@@ -10,20 +10,26 @@ Wubba dubba lub lub!
 
 add a line into the configuration (typically `test.exs`):
 
+If you'd like to drop in multiverse sharding for registry
+
 ```elixir
-config :my_app, use_multiverses: true
+# config.exs
+config :my_app, Registry, Registry
 ```
 
-If you'd like to drop in multiverse sharding for a given module,
-You should structure your module as follows:
+```elixir
+# test.exs
+config :my_app, Registry, Multiverses.Registry
+```
+
 
 ```elixir
 defmodule MyModule do
-  use Multiverses, with: Registry
+  @registry Application.config_env!(:my_app, Registry)
 
   def my_function(...) do
     # uses Multiverses.Registry when enabled.
-    Registry.unegister(...)
+    @registry.unegister(...)
   end
 end
 ```
@@ -34,11 +40,13 @@ themselves via the `use` directive.  For example:
 ```elixir
 defmodule MyServer do
 
-  use Multiverses.GenServer
+  @gen_server Application.config_env!(:my_app, GenServer)
+
+  use GenServer
 
   def start_link(_) do
-    # uses Multiverses.GenServer in
-    GenServer.
+    # uses Multiverses.GenServer instead of GenServer
+    @gen_server.start_link(...)
   end
 
 end
@@ -64,7 +72,7 @@ by adding `multiverses` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:multiverses, "~> 0.7.0", runtime: (Mix.env() == :test)}
+    {:multiverses, "~> 0.8.0", runtime: (Mix.env() == :test)}
   ]
 end
 ```

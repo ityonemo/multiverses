@@ -15,11 +15,11 @@ defmodule Multiverses.Supervisor do
 
   ```elixir
   defmodule MyApp.CustomSupervisor do
-    use Multiverses, with: Supervisor
+    @supervisor Application.get_env(:my_app, Supervisor)
     use Supervisor
 
     def start_link(arg, opts) do
-      Supervisor.start_link(__MODULE__, arg, opts)
+      @supervisor.start_link(__MODULE__, arg, opts)
     end
 
     @impl true
@@ -27,7 +27,7 @@ defmodule Multiverses.Supervisor do
       children = [
         ... supervised children
       ]
-      Supervisor.init(children, strategy: :one_for_one)
+      @supervisor.init(children, strategy: :one_for_one)
     end
   end
   ```

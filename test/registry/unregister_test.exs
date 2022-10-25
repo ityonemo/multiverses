@@ -1,7 +1,7 @@
 import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.Registry.UnregisterTest do
-  use Multiverses, with: Registry
+  @registry Multiverses.Registry
 
   use ExUnit.Case, async: true
 
@@ -11,7 +11,7 @@ defmoduler MultiversesTest.Registry.UnregisterTest do
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom
-    {:ok, _reg} = Registry.start_link(keys: :unique, name: reg)
+    {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
@@ -20,7 +20,7 @@ defmoduler MultiversesTest.Registry.UnregisterTest do
 
       send(test_pid, :inner_started)
 
-      assert 1 == Registry.count(reg)
+      assert 1 == @registry.count(reg)
 
       receive do :release -> :ok end
 
@@ -28,20 +28,20 @@ defmoduler MultiversesTest.Registry.UnregisterTest do
 
       Process.sleep(10)
 
-      assert 0 == Registry.count(reg)
+      assert 0 == @registry.count(reg)
 
       send(test_pid, :inner_unregistered)
     end)
 
     receive do :inner_started -> :ok end
 
-    assert 1 == Registry.count(reg)
+    assert 1 == @registry.count(reg)
 
     TestServer.unregister(reg, outer_srv)
 
     Process.sleep(10)
 
-    assert 0 == Registry.count(reg)
+    assert 0 == @registry.count(reg)
 
     send(inner_pid, :release)
 

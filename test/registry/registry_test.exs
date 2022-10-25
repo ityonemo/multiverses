@@ -1,7 +1,7 @@
 import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.RegistryTest do
-  use Multiverses, with: Registry
+  @registry Multiverses.Registry
 
   use ExUnit.Case, async: true
 
@@ -9,7 +9,7 @@ defmoduler MultiversesTest.RegistryTest do
 
   defp get(registry, key) do
     registry
-    |> Registry.select(
+    |> @registry.select(
       [{{:"$1", :"$2", :_},
        [{:==, :"$1", {:const, key}}],
        [:"$2"]}])
@@ -20,7 +20,7 @@ defmoduler MultiversesTest.RegistryTest do
   end
 
   defp all(registry) do
-    Registry.select(registry, [{{:_, :"$2", :_}, [], [:"$2"]}])
+    @registry.select(registry, [{{:_, :"$2", :_}, [], [:"$2"]}])
   end
 
   describe "Registry registries" do
@@ -28,7 +28,7 @@ defmoduler MultiversesTest.RegistryTest do
       test_pid = self()
 
       reg = test_pid |> inspect |> String.to_atom
-      {:ok, _reg} = Registry.start_link(keys: :unique, name: reg)
+      {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
       {:ok, foo} = TestServer.start_link(reg, :foo)
 
@@ -57,7 +57,7 @@ defmoduler MultiversesTest.RegistryTest do
       test_pid = self()
 
       reg = test_pid |> inspect |> String.to_atom
-      {:ok, _reg} = Registry.start_link(keys: :duplicate, name: reg)
+      {:ok, _reg} = @registry.start_link(keys: :duplicate, name: reg)
 
       {:ok, foo} = TestServer.start_link(reg, :foo)
 

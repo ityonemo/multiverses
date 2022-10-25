@@ -2,16 +2,17 @@ import MultiversesTest.Replicant
 
 defmoduler MultiversesTest.Application.PutTest do
   use ExUnit.Case, async: true
-  use Multiverses, with: Application
+
+  @application Multiverses.Application
 
   describe "basic Application.put_env/3 sets an env variable" do
     test "that can be retrieved" do
-      Application.put_env(:multiverses, :foo, :bar)
-      assert :bar == Application.get_env(:multiverses, :foo)
+      @application.put_env(:multiverses, :foo, :bar)
+      assert :bar == @application.get_env(:multiverses, :foo)
     end
 
     test "default elixir get_env doesn't see it" do
-      Application.put_env(:multiverses, :foo, :bar)
+      @application.put_env(:multiverses, :foo, :bar)
       assert nil == Elixir.Application.get_env(:multiverses, :foo)
     end
   end
@@ -20,7 +21,7 @@ defmoduler MultiversesTest.Application.PutTest do
     test "it's invisible if it's in another universe" do
       test_pid = self()
       spawn fn ->
-        Application.put_env(:multiverses, :foo, :bar)
+        @application.put_env(:multiverses, :foo, :bar)
         send(test_pid, :unblock)
       end
 
@@ -30,7 +31,7 @@ defmoduler MultiversesTest.Application.PutTest do
 
     test "it's visible if it's in the same universe" do
       fn ->
-        Application.put_env(:multiverses, :foo, :bar)
+        @application.put_env(:multiverses, :foo, :bar)
       end
       |> Task.async
       |> Task.await

@@ -5,16 +5,16 @@ defmoduler MultiversesTest.DynamicSupervisor.BasicTest do
 
   alias MultiversesTest.BasicGenServer, as: TestServer
 
-  use Multiverses, with: DynamicSupervisor
+  @dynamic_supervisor Multiverses.DynamicSupervisor
 
   test "multiverse dynamic supervisors label genservers correctly" do
 
     test_pid = self()
-    {:ok, sup} = DynamicSupervisor.start_link(strategy: :one_for_one)
-    {:ok, outer_child} = DynamicSupervisor.start_child(sup, {TestServer, forward_callers: true})
+    {:ok, sup} = @dynamic_supervisor.start_link(strategy: :one_for_one)
+    {:ok, outer_child} = @dynamic_supervisor.start_child(sup, {TestServer, forward_callers: true})
 
     inner_universe = spawn fn ->
-      {:ok, inner_child} = DynamicSupervisor.start_child(sup, {TestServer, forward_callers: true})
+      {:ok, inner_child} = @dynamic_supervisor.start_child(sup, {TestServer, forward_callers: true})
 
       send(test_pid, {:inner_child, inner_child})
       receive do :hold -> :open end
