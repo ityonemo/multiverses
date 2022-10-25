@@ -8,14 +8,16 @@ defmoduler MultiversesTest.Registry.DispatchTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.dispatch/4" do
+    Multiverses.register(Registry)
     test_pid = self()
 
-    reg = test_pid |> inspect |> String.to_atom
+    reg = test_pid |> inspect |> String.to_atom()
     {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
+      Multiverses.register(Registry)
       assert 0 == @registry.count(reg)
 
       {:ok, _} = TestServer.start_link(reg, :foo)
@@ -28,12 +30,16 @@ defmoduler MultiversesTest.Registry.DispatchTest do
         send(test_pid, {:inner_entries, entries})
       end)
 
-      receive do :hold_open -> :ok end
+      receive do
+        :hold_open -> :ok
+      end
     end)
 
-    receive do :inner_started -> :ok end
+    receive do
+      :inner_started -> :ok
+    end
 
-    Registry.dispatch(reg, :foo, fn entries ->
+    @registry.dispatch(reg, :foo, fn entries ->
       send(test_pid, {:outer_entries, entries})
     end)
 

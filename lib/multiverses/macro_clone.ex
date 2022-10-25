@@ -24,7 +24,7 @@ defmodule Multiverses.Clone do
 
   defmacro __using__(opts) do
     unless Keyword.has_key?(opts, :module) and
-           Keyword.has_key?(opts, :except) do
+             Keyword.has_key?(opts, :except) do
       raise CompileError,
         file: __CALLER__.file,
         line: __CALLER__.line,
@@ -42,19 +42,21 @@ defmodule Multiverses.Clone do
     |> Enum.map(&_mfa_to_defdelegate(module, &1))
   end
 
-  @spec _mfa_to_defdelegate(module, {atom, arity}) :: Macro.t
+  @spec _mfa_to_defdelegate(module, {atom, arity}) :: Macro.t()
   @doc false
   ## NB This function should be considered "private" and is only public
   ## so that it can be testable.
   def _mfa_to_defdelegate(module, {function, arity}) do
     {:defdelegate, [context: Elixir, import: Kernel],
-      [{function, [], arity_to_params(arity)}, [to: module]]}
+     [{function, [], arity_to_params(arity)}, [to: module]]}
   end
 
   defp arity_to_params(arity, unquoted \\ false)
   defp arity_to_params(0, _), do: Elixir
+
   defp arity_to_params(arity, unquoted) do
-    wrap = if unquoted, do: &unquoted/1, else: &(&1)
+    wrap = if unquoted, do: &unquoted/1, else: & &1
+
     for idx <- 1..arity do
       param = String.to_atom("p#{idx}")
       wrap.({param, [], Elixir})

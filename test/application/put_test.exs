@@ -20,10 +20,11 @@ defmoduler MultiversesTest.Application.PutTest do
   describe "when another process puts an env variable" do
     test "it's invisible if it's in another universe" do
       test_pid = self()
-      spawn fn ->
+
+      spawn(fn ->
         @application.put_env(:multiverses, :foo, :bar)
         send(test_pid, :unblock)
-      end
+      end)
 
       assert_receive :unblock
       assert nil == Elixir.Application.get_env(:multiverses, :foo)
@@ -33,8 +34,8 @@ defmoduler MultiversesTest.Application.PutTest do
       fn ->
         @application.put_env(:multiverses, :foo, :bar)
       end
-      |> Task.async
-      |> Task.await
+      |> Task.async()
+      |> Task.await()
 
       assert nil == Elixir.Application.get_env(:multiverses, :foo)
     end

@@ -6,4 +6,4 @@ end
 
 import Mox
 
-defmock MockBench, for: TestBench
+defmock(MockBench, for: TestBench)

@@ -9,10 +9,11 @@ defmoduler MultiversesTest.GenServerTest do
     test_pid = self()
     {:ok, srv} = TestServer.start_link(forward_callers: true)
 
-    inner_universe = spawn fn ->
-      {:ok, inner_srv} = TestServer.start_link(forward_callers: true)
-      send(test_pid, {:inner_srv, TestServer.get_universe(inner_srv)})
-    end
+    inner_universe =
+      spawn(fn ->
+        {:ok, inner_srv} = TestServer.start_link(forward_callers: true)
+        send(test_pid, {:inner_srv, TestServer.get_universe(inner_srv)})
+      end)
 
     assert self() == TestServer.get_universe(srv)
     assert self() != inner_universe

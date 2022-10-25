@@ -9,10 +9,7 @@ defmoduler MultiversesTest.RegistryTest do
 
   defp get(registry, key) do
     registry
-    |> @registry.select(
-      [{{:"$1", :"$2", :_},
-       [{:==, :"$1", {:const, key}}],
-       [:"$2"]}])
+    |> @registry.select([{{:"$1", :"$2", :_}, [{:==, :"$1", {:const, key}}], [:"$2"]}])
     |> case do
       [pid] -> pid
       [] -> nil
@@ -25,14 +22,16 @@ defmoduler MultiversesTest.RegistryTest do
 
   describe "Registry registries" do
     test "store sharded views of state" do
+      Multiverses.register(Registry)
       test_pid = self()
 
-      reg = test_pid |> inspect |> String.to_atom
+      reg = test_pid |> inspect |> String.to_atom()
       {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
       {:ok, foo} = TestServer.start_link(reg, :foo)
 
       spawn_link(fn ->
+        Multiverses.register(Registry)
         # make sure we can't see foo
         assert nil == get(reg, :foo)
 
@@ -43,43 +42,55 @@ defmoduler MultiversesTest.RegistryTest do
 
         send(test_pid, :bar_started)
 
-        receive do :hold_open -> :ok end
+        receive do
+          :hold_open -> :ok
+        end
       end)
 
-      receive do :bar_started -> :ok end
+      receive do
+        :bar_started -> :ok
+      end
+
       assert nil == get(reg, :bar)
       assert foo == get(reg, :foo)
 
-      assert [foo] = all(reg)
+      assert [^foo] = all(reg)
     end
 
     test "work with shared names" do
+      Multiverses.register(Registry)
       test_pid = self()
 
-      reg = test_pid |> inspect |> String.to_atom
+      reg = test_pid |> inspect |> String.to_atom()
       {:ok, _reg} = @registry.start_link(keys: :duplicate, name: reg)
 
       {:ok, foo} = TestServer.start_link(reg, :foo)
 
       spawn_link(fn ->
+        Multiverses.register(Registry)
         # make sure we can't see foo
         assert nil == get(reg, :foo)
 
         {:ok, foo_inner} = TestServer.start_link(reg, :foo)
 
-        #assert foo_inner == get(reg, :foo)
+        # assert foo_inner == get(reg, :foo)
         assert [foo_inner] == all(reg)
 
         send(test_pid, :inner_started)
 
-        receive do :hold_open -> :ok end
+        receive do
+          :hold_open -> :ok
+        end
       end)
 
-      receive do :inner_started -> :ok end
+      receive do
+        :inner_started -> :ok
+      end
+
       assert nil == get(reg, :bar)
       assert foo == get(reg, :foo)
 
-      assert [foo] = all(reg)
+      assert [^foo] = all(reg)
     end
   end
 end

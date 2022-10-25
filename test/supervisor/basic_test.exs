@@ -2,7 +2,7 @@ import MultiversesTest.Replicant
 
 defmodule MultiversesTest.Supervisor do
   @supervisor Multiverse.Supervisor
-  
+
   use Supervisor
 
   alias MultiversesTest.BasicGenServer, as: TestServer
@@ -14,7 +14,6 @@ defmodule MultiversesTest.Supervisor do
   def init(_) do
     Supervisor.init([{TestServer, forward_callers: true}], strategy: :one_for_one)
   end
-
 end
 
 defmoduler MultiversesTest.Supervisor.BasicTest do
@@ -28,22 +27,31 @@ defmoduler MultiversesTest.Supervisor.BasicTest do
     test_pid = self()
     {:ok, outer_sup} = MultiversesTest.Supervisor.start_link()
 
-    outer_child = outer_sup
-    |> Supervisor.which_children
-    |> find_pid
-
-    inner_universe = spawn fn ->
-      {:ok, inner_sup} = MultiversesTest.Supervisor.start_link()
-
-      inner_child = inner_sup
-      |> Supervisor.which_children
+    outer_child =
+      outer_sup
+      |> Supervisor.which_children()
       |> find_pid
 
-      send(test_pid, {:inner_child, inner_child})
-      receive do :hold -> :open end
-    end
+    inner_universe =
+      spawn(fn ->
+        {:ok, inner_sup} = MultiversesTest.Supervisor.start_link()
 
-    inner_child = receive do {:inner_child, inner_child} -> inner_child end
+        inner_child =
+          inner_sup
+          |> Supervisor.which_children()
+          |> find_pid
+
+        send(test_pid, {:inner_child, inner_child})
+
+        receive do
+          :hold -> :open
+        end
+      end)
+
+    inner_child =
+      receive do
+        {:inner_child, inner_child} -> inner_child
+      end
 
     assert test_pid == TestServer.get_universe(outer_child)
     assert inner_universe == TestServer.get_universe(inner_child)

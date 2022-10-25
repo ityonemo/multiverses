@@ -10,18 +10,19 @@ defmodule Multiverses.MixProject do
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       test_coverage: [tool: ExCoveralls],
-      preferred_cli_env:
-        [coveralls: :test,
-         "coveralls.detail": :test,
-         "coveralls.post": :test,
-         "coveralls.html": :test,
-         release: :lab],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test,
+        release: :lab
+      ],
       package: [
-          description: "multiverse support for Elixir Standard Library",
-          licenses: ["MIT"],
-          files: ~w(lib mix.exs README* LICENSE* VERSIONS*),
-          links: %{"GitHub" => "https://github.com/ityonemo/multiverses"}
-        ],
+        description: "multiverse support for Elixir Standard Library",
+        licenses: ["MIT"],
+        files: ~w(lib mix.exs README* LICENSE* VERSIONS*),
+        links: %{"GitHub" => "https://github.com/ityonemo/multiverses"}
+      ],
       docs: [
         main: "Multiverses",
         extras: ["README.md"],

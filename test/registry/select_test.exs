@@ -6,44 +6,81 @@ defmoduler MultiversesTest.Registry.SelectTest do
 
   alias MultiversesTest.Registry.TestServer
 
-  test "registry.lookup/2" do
+  test "registry.select/2" do
+    Multiverses.register(Registry)
     test_pid = self()
 
-    reg = test_pid |> inspect |> String.to_atom
+    reg = test_pid |> inspect |> String.to_atom()
     {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
+      Multiverses.register(Registry)
       {:ok, _inner_srv} = TestServer.start_link(reg, :foo)
       send(test_pid, :inner_started)
-      receive do :hold_open -> :ok end
+
+      receive do
+        :hold_open -> :ok
+      end
     end)
 
-    receive do :inner_started -> :ok end
+    receive do
+      :inner_started -> :ok
+    end
 
-    assert [true] == @registry.select(reg, [{
-      {:_, :_, :_}, [], [true]
-    }])
+    assert [true] ==
+             @registry.select(reg, [
+               {
+                 {:_, :_, :_},
+                 [],
+                 [true]
+               }
+             ])
 
-    assert [outer_srv] == @registry.select(reg, [{
-      {:_, :"$1", :_}, [], [:"$1"]
-    }])
+    assert [outer_srv] ==
+             @registry.select(reg, [
+               {
+                 {:_, :"$1", :_},
+                 [],
+                 [:"$1"]
+               }
+             ])
 
-    assert [:foo] == @registry.select(reg, [{
-      {:"$1", :_, :_}, [], [:"$1"]
-    }])
+    assert [:foo] ==
+             @registry.select(reg, [
+               {
+                 {:"$1", :_, :_},
+                 [],
+                 [:"$1"]
+               }
+             ])
 
-    assert [outer_srv] == @registry.select(reg, [{
-      {:"$1", :"$2", :_}, [{:==, :"$1", {:const, :foo}}], [:"$2"]
-    }])
+    assert [outer_srv] ==
+             @registry.select(reg, [
+               {
+                 {:"$1", :"$2", :_},
+                 [{:==, :"$1", {:const, :foo}}],
+                 [:"$2"]
+               }
+             ])
 
-    assert [foo: outer_srv] == Registry.select(reg, [{
-      {:"$1", :"$2", :_}, [], [{{:"$1", :"$2"}}]
-    }])
+    assert [foo: outer_srv] ==
+             @registry.select(reg, [
+               {
+                 {:"$1", :"$2", :_},
+                 [],
+                 [{{:"$1", :"$2"}}]
+               }
+             ])
 
-    assert [%{key: :foo, val: outer_srv}] == Registry.select(reg, [{
-      {:"$1", :"$2", :_}, [], [%{key: :"$1", val: :"$2"}]
-    }])
+    assert [%{key: :foo, val: outer_srv}] ==
+             @registry.select(reg, [
+               {
+                 {:"$1", :"$2", :_},
+                 [],
+                 [%{key: :"$1", val: :"$2"}]
+               }
+             ])
   end
 end

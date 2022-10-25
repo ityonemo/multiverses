@@ -29,22 +29,14 @@ defmodule Multiverses.Application do
 
   use Multiverses.Clone,
     module: Application,
-    except: [delete_env: 2,
-             fetch_env!: 2, fetch_env: 2,
-             get_env: 2, get_env: 3,
-             put_env: 3]
+    except: [delete_env: 2, fetch_env!: 2, fetch_env: 2, get_env: 2, get_env: 3, put_env: 3]
 
   # we're abusing the application key format, which works because ETS tables
   # are what back the application environment variables, and the system
   # tolerates "other terms", even though that's now how they are typespecced
   # out.
   @dialyzer {:nowarn_function,
-    delete_env: 2,
-    fetch_env: 2,
-    fetch_env!: 2,
-    get_env: 2,
-    get_env: 3,
-    put_env: 3}
+             delete_env: 2, fetch_env: 2, fetch_env!: 2, get_env: 2, get_env: 3, put_env: 3}
 
   defp universe(key) do
     require Multiverses
@@ -56,6 +48,7 @@ defmodule Multiverses.Application do
     case Application.fetch_env(app, universe(key)) do
       {:ok, _} ->
         Application.delete_env(app, universe(key))
+
       :error ->
         Application.put_env(app, universe(key), :"$tombstone")
     end
@@ -64,8 +57,12 @@ defmodule Multiverses.Application do
   @doc "See `Application.fetch_env/2`."
   def fetch_env(app, key) do
     case Application.fetch_env(app, universe(key)) do
-      {:ok, :"$tombstone"} -> :error
-      result = {:ok, _} -> result
+      {:ok, :"$tombstone"} ->
+        :error
+
+      result = {:ok, _} ->
+        result
+
       :error ->
         Application.fetch_env(app, key)
     end
@@ -74,7 +71,9 @@ defmodule Multiverses.Application do
   @doc "See `Application.fetch_env!/2`."
   def fetch_env!(app, key) do
     case Application.fetch_env(app, universe(key)) do
-      {:ok, env} -> env
+      {:ok, env} ->
+        env
+
       :error ->
         Application.fetch_env!(app, key)
     end
@@ -88,7 +87,9 @@ defmodule Multiverses.Application do
   @doc "See `Application.get_env/3`."
   def get_env(app, key, default) do
     case Multiverses.Application.fetch_env(app, key) do
-      {:ok, env} -> env
+      {:ok, env} ->
+        env
+
       :error ->
         # fall back to the global value.
         Application.get_env(app, key, default)
@@ -99,5 +100,4 @@ defmodule Multiverses.Application do
   def put_env(app, key, value) do
     Application.put_env(app, universe(key), value)
   end
-
 end

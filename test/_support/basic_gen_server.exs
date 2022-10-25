@@ -11,10 +11,10 @@ defmodule MultiversesTest.BasicGenServer do
   @impl true
   def init(:state), do: {:ok, :state}
 
-  def get_universe(srv), do: @gen_server.call(srv, :universe)
+  def get_token(srv, what), do: @gen_server.call(srv, {:token, what})
 
   @impl true
-  def handle_call(:universe, _from, state) do
-    {:reply, Multiverses.self(), state}
+  def handle_call({:token, what}, _from, state) do
+    {:reply, Multiverses.token(what), state}
   end
 end

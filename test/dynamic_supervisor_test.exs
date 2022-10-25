@@ -11,6 +11,7 @@ defmodule MultiversesTest.DynamicSupervisor.TestServer do
   def start_link(link) do
     GenServer.start_link(__MODULE__, link)
   end
+
   def init(link) do
     Multiverses.port(link)
     {:ok, nil}
@@ -19,11 +20,8 @@ defmodule MultiversesTest.DynamicSupervisor.TestServer do
   def get_universe(server), do: GenServer.call(server, :get_universe)
   def get_mox(server), do: GenServer.call(server, :get_mox)
 
-  def handle_call(:get_universe, _, state), do:
-    {:reply, Process.get(:"$callers"), state}
-  def handle_call(:get_mox, _, state), do:
-    {:reply, MockBench.foo(), state}
-
+  def handle_call(:get_universe, _, state), do: {:reply, Process.get(:"$callers"), state}
+  def handle_call(:get_mox, _, state), do: {:reply, MockBench.foo(), state}
 end
 
 import MultiversesTest.Replicant
@@ -71,17 +69,21 @@ defmoduler MultiversesTest.DynamicSupervisorTest do
       end)
 
       assert :bar == TestServer.get_mox(srv1)
-      receive do :unblock -> :ok end
+
+      receive do
+        :unblock -> :ok
+      end
 
       # show that this works, two tasks deep
-      result = Task.async(fn ->
+      result =
         Task.async(fn ->
-          {:ok, srv3} = TestServer.start_supervised(sup)
-          TestServer.get_mox(srv3)
+          Task.async(fn ->
+            {:ok, srv3} = TestServer.start_supervised(sup)
+            TestServer.get_mox(srv3)
+          end)
+          |> Task.await()
         end)
-        |> Task.await
-      end)
-      |> Task.await
+        |> Task.await()
 
       assert :bar == result
     end

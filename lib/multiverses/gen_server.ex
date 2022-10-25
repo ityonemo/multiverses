@@ -1,5 +1,4 @@
 defmodule Multiverses.GenServer do
-
   @moduledoc """
   This module is intended to be a drop-in replacement for `use GenServer`.
   Note that this is different from other modules.
@@ -53,7 +52,6 @@ defmodule Multiverses.GenServer do
   require Multiverses
 
   defmacro __using__(opts) do
-
     gen_server_opts = Macro.escape(opts)
 
     quote do
@@ -64,6 +62,7 @@ defmodule Multiverses.GenServer do
           id: __MODULE__,
           start: {__MODULE__, :start_link, [init_arg]}
         }
+
         Supervisor.child_spec(default, unquote(gen_server_opts))
       end
 
@@ -89,15 +88,20 @@ defmodule Multiverses.GenServer do
   @doc false
   def do_start(link, module, init_arg, options) do
     portal = [callers: Multiverses.link()]
+
     case Keyword.pop(options, :name) do
       {nil, opts} ->
         :gen.start(__MODULE__, link, module, init_arg, opts ++ portal)
+
       {atom, opts} when is_atom(atom) ->
         :gen.start(__MODULE__, link, {:local, atom}, module, init_arg, opts ++ portal)
+
       {{:global, _term} = tuple, opts} ->
         :gen.start(__MODULE__, link, tuple, module, init_arg, opts ++ portal)
+
       {{:via, via_module, _term} = tuple, opts} when is_atom(via_module) ->
         :gen.start(__MODULE__, link, tuple, module, init_arg, opts ++ portal)
+
       {other, _} ->
         # trick dialyzer into not complaining about non-local returns.
         case :erlang.phash2(1, 1) do
@@ -110,6 +114,7 @@ defmodule Multiverses.GenServer do
               * {:via, module, term}
             Got: #{inspect(other)}
             """
+
           1 ->
             :ignore
         end
@@ -126,6 +131,7 @@ defmodule Multiverses.GenServer do
     if options![:forward_callers] do
       Multiverses.port(options![:callers])
     end
+
     options! = Keyword.delete(options!, :forward_callers)
     :gen_server.init_it(starter, self_param, name, mod, args, options!)
   end

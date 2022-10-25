@@ -1,5 +1,4 @@
 defmodule Multiverses.DynamicSupervisor do
-
   @moduledoc """
   This module is intended to be a drop-in replacement for `DynamicSupervisor`.
 
@@ -38,9 +37,10 @@ defmodule Multiverses.DynamicSupervisor do
     # works by injecting a different supervisor bootstrap *through* the
     # custom `bootstrap/2` function provided in this module.
 
-    child = spec
-    |> to_spec_tuple
-    |> inject_bootstrap(Multiverses.link())
+    child =
+      spec
+      |> to_spec_tuple
+      |> inject_bootstrap(Multiverses.link())
 
     GenServer.call(supervisor, {:start_child, child})
   end
@@ -53,18 +53,21 @@ defmodule Multiverses.DynamicSupervisor do
   # it's not entirely clear why this is happening here.
   @dialyzer {:nowarn_function, inject_bootstrap: 2}
 
-  @spec inject_bootstrap(Supervisor.child_spec, Multiverses.link) :: Supervisor.child_spec
+  @spec inject_bootstrap(Supervisor.child_spec(), Multiverses.link()) :: Supervisor.child_spec()
   defp inject_bootstrap({_, mfa, restart, shutdown, type, modules}, link) do
     {bootstrap_for(mfa, link), restart, shutdown, type, modules}
   end
+
   defp inject_bootstrap(spec_map = %{start: {mod, _, _}}, link) do
     restart = Map.get(spec_map, :restart, :permanent)
     type = Map.get(spec_map, :type, :worker)
     modules = Map.get(spec_map, :modules, [mod])
-    shutdown = case type do
-      :worker -> Map.get(spec_map, :shutdown, 5_000)
-      :supervisor -> Map.get(spec_map, :shutdown, :infinity)
-    end
+
+    shutdown =
+      case type do
+        :worker -> Map.get(spec_map, :shutdown, 5_000)
+        :supervisor -> Map.get(spec_map, :shutdown, :infinity)
+      end
 
     {bootstrap_for(spec_map.start, link), restart, shutdown, type, modules}
   end
@@ -76,5 +79,4 @@ defmodule Multiverses.DynamicSupervisor do
     Multiverses.drop()
     res
   end
-
 end

@@ -26,8 +26,8 @@ defmoduler MultiversesTest.Application.FetchTest do
       fn ->
         @application.put_env(:multiverses, :global, :overlay)
       end
-      |> Task.async
-      |> Task.await
+      |> Task.async()
+      |> Task.await()
 
       assert {:ok, :overlay} == @application.fetch_env(:multiverses, :global)
     end
@@ -35,10 +35,10 @@ defmoduler MultiversesTest.Application.FetchTest do
     test "can't see an overlay set in a different universe" do
       test_pid = self()
 
-      spawn fn ->
+      spawn(fn ->
         @application.put_env(:multiverses, :global, :overlay)
         send(test_pid, :unblock)
-      end
+      end)
 
       assert_receive :unblock
 

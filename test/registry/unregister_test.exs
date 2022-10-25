@@ -8,32 +8,40 @@ defmoduler MultiversesTest.Registry.UnregisterTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.unregister/2" do
+    Multiverses.register(Registry)
     test_pid = self()
 
-    reg = test_pid |> inspect |> String.to_atom
+    reg = test_pid |> inspect |> String.to_atom()
     {:ok, _reg} = @registry.start_link(keys: :unique, name: reg)
 
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
-    inner_pid = spawn_link(fn ->
-      {:ok, inner_srv} = TestServer.start_link(reg, :foo)
+    inner_pid =
+      spawn_link(fn ->
+        Multiverses.register(Registry)
+        
+        {:ok, inner_srv} = TestServer.start_link(reg, :foo)
 
-      send(test_pid, :inner_started)
+        send(test_pid, :inner_started)
 
-      assert 1 == @registry.count(reg)
+        assert 1 == @registry.count(reg)
 
-      receive do :release -> :ok end
+        receive do
+          :release -> :ok
+        end
 
-      TestServer.unregister(reg, inner_srv)
+        TestServer.unregister(reg, inner_srv)
 
-      Process.sleep(10)
+        Process.sleep(10)
 
-      assert 0 == @registry.count(reg)
+        assert 0 == @registry.count(reg)
 
-      send(test_pid, :inner_unregistered)
-    end)
+        send(test_pid, :inner_unregistered)
+      end)
 
-    receive do :inner_started -> :ok end
+    receive do
+      :inner_started -> :ok
+    end
 
     assert 1 == @registry.count(reg)
 

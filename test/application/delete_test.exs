@@ -29,8 +29,8 @@ defmoduler MultiversesTest.Application.DeleteTest do
       fn ->
         @application.delete_env(:multiverses, :global)
       end
-      |> Task.async
-      |> Task.await
+      |> Task.async()
+      |> Task.await()
 
       assert :error == @application.fetch_env(:multiverses, :global)
     end
@@ -38,15 +38,14 @@ defmoduler MultiversesTest.Application.DeleteTest do
     test "can't see an deletion done in a different universe" do
       test_pid = self()
 
-      spawn fn ->
+      spawn(fn ->
         @application.delete_env(:multiverses, :global)
         send(test_pid, :unblock)
-      end
+      end)
 
       assert_receive :unblock
 
       assert :value == @application.get_env(:multiverses, :global)
     end
   end
-
 end

@@ -1,5 +1,4 @@
 defmodule Multiverses.Supervisor do
-
   @moduledoc """
   This module is intended to be a drop-in replacement for `Supervisor`.
 
@@ -70,6 +69,7 @@ defmodule Multiverses.Supervisor do
   @doc false
   def do_start(link, module, arg, options) do
     portal = [callers: Multiverses.link()]
+
     case Keyword.pop(options, :name) do
       {nil, opts} ->
         init_arg = {self(), module, arg}
@@ -96,6 +96,7 @@ defmodule Multiverses.Supervisor do
               * {:via, module, term}
             Got: #{inspect(other)}
             """
+
           1 ->
             :ignore
         end

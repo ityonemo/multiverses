@@ -28,7 +28,7 @@ defmodule Multiverses do
   In `mix.exs`, you should add the following directive:
 
   ```elixir
-  {:multiverses, "~> #{Multiverses.MixProject.version}", runtime: (Mix.env() == :test)}}
+  {:multiverses, "~> #{Multiverses.MixProject.version()}", runtime: (Mix.env() == :test)}}
   ```
 
   ### In your code
@@ -103,9 +103,14 @@ defmodule Multiverses do
 
   alias Multiverses.Server
 
+  @type token :: pos_integer()
+
   @spec register(module) :: :ok
   defdelegate register(module), to: Server
 
-  @spec token(module) :: pos_integer
+  @spec token(module) :: token
   defdelegate token(module), to: Server
+
+  @spec allow(module, pid | token, term) :: :ok
+  defdelegate allow(module, pid, allowed), to: Server
 end
