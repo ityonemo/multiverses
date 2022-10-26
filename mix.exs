@@ -30,7 +30,8 @@ defmodule Multiverses.MixProject do
       ],
       start_permanent: Mix.env() == :prod,
       dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"],
-      deps: deps()
+      deps: deps(),
+      elixirc_paths: elixirc_paths(Mix.env())
     ]
   end
 
@@ -40,6 +41,9 @@ defmodule Multiverses.MixProject do
       mod: {Multiverses.AppSupervisor, []}
     ]
   end
+
+  defp elixirc_paths(:test), do: ["lib", "test/_support"]
+  defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
     [

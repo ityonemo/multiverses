@@ -25,10 +25,11 @@ defmodule Multiverses.Registry do
       unregister: 2,
       update_value: 3,
       select: 2,
+      whereis_name: 1,
       # these two functions are deprecated.
       start_link: 3,
       # these two functions are deprecated.
-      start_link: 2
+      start_link: 2,
     ]
 
   require Multiverses
@@ -138,7 +139,6 @@ defmodule Multiverses.Registry do
     Registry.update_value(registry, {token(), key}, callback)
   end
 
-  def whereis_name(_) do
-    raise "foo"
-  end
+  def whereis_name({registry, key}), do: Registry.whereis_name({registry, {token(), key}})
+  def whereis_name({registry, key, _value}), do: Registry.whereis_name({registry, {token(), key}})
 end
