@@ -17,7 +17,7 @@ defmodule Multiverses.Server do
   use GenServer
 
   # API
-  @spec register(module) :: :ok
+  @spec shard(module) :: :ok
   @spec token(module) :: Multiverse.token()
   @spec allow(module, pid | Multiverse.token(), term) :: :ok
 
@@ -36,11 +36,11 @@ defmodule Multiverses.Server do
     {:ok, ref}
   end
 
-  def register(module) do
-    GenServer.call(@this, {:register, module, self()})
+  def shard(module) do
+    GenServer.call(@this, {:shard, module, self()})
   end
 
-  defp register_impl(module, pid, _from, table) do
+  defp shard_impl(module, pid, _from, table) do
     token = :erlang.phash2({module, pid})
     :ets.insert(table, {{module, pid}, token})
     {:reply, :ok, table}
@@ -117,8 +117,8 @@ defmodule Multiverses.Server do
 
   # ROUTER
 
-  def handle_call({:register, module, pid}, from, table),
-    do: register_impl(module, pid, from, table)
+  def handle_call({:shard, module, pid}, from, table),
+    do: shard_impl(module, pid, from, table)
 
   def handle_call({:token, module, callers}, from, table),
     do: token_impl(module, callers, from, table)

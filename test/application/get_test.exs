@@ -6,7 +6,7 @@ defmoduler MultiversesTest.Application.GetTest do
   @application Multiverses.Application
 
   setup do
-    Multiverses.register(Application)
+    Multiverses.shard(Application)
   end
 
   # see test_helper.exs for the :global environment variable

@@ -69,7 +69,7 @@ defmodule Multiverses do
 
   ```elixir
   setup do
-    Multiverses.register(Application)
+    Multiverses.shard(Application)
   end
   ```
 
@@ -105,8 +105,8 @@ defmodule Multiverses do
 
   @type token :: pos_integer()
 
-  @spec register(module) :: :ok
-  defdelegate register(module), to: Server
+  @spec shard(module) :: :ok
+  defdelegate shard(module), to: Server
 
   @spec token(module) :: token
   defdelegate token(module), to: Server

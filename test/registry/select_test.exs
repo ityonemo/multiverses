@@ -7,7 +7,7 @@ defmoduler MultiversesTest.Registry.SelectTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.select/2" do
-    Multiverses.register(Registry)
+    Multiverses.shard(Registry)
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom()
@@ -16,7 +16,7 @@ defmoduler MultiversesTest.Registry.SelectTest do
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
-      Multiverses.register(Registry)
+      Multiverses.shard(Registry)
       {:ok, _inner_srv} = TestServer.start_link(reg, :foo)
       send(test_pid, :inner_started)
 

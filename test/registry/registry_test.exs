@@ -22,7 +22,7 @@ defmoduler MultiversesTest.RegistryTest do
 
   describe "Registry registries" do
     test "store sharded views of state" do
-      Multiverses.register(Registry)
+      Multiverses.shard(Registry)
       test_pid = self()
 
       reg = test_pid |> inspect |> String.to_atom()
@@ -31,7 +31,7 @@ defmoduler MultiversesTest.RegistryTest do
       {:ok, foo} = TestServer.start_link(reg, :foo)
 
       spawn_link(fn ->
-        Multiverses.register(Registry)
+        Multiverses.shard(Registry)
         # make sure we can't see foo
         assert nil == get(reg, :foo)
 
@@ -58,7 +58,7 @@ defmoduler MultiversesTest.RegistryTest do
     end
 
     test "work with shared names" do
-      Multiverses.register(Registry)
+      Multiverses.shard(Registry)
       test_pid = self()
 
       reg = test_pid |> inspect |> String.to_atom()
@@ -67,7 +67,7 @@ defmoduler MultiversesTest.RegistryTest do
       {:ok, foo} = TestServer.start_link(reg, :foo)
 
       spawn_link(fn ->
-        Multiverses.register(Registry)
+        Multiverses.shard(Registry)
         # make sure we can't see foo
         assert nil == get(reg, :foo)
 

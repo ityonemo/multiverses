@@ -8,7 +8,7 @@ defmoduler MultiversesTest.Registry.KeysTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.keys/2" do
-    Multiverses.register(Registry)
+    Multiverses.shard(Registry)
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom()
@@ -17,7 +17,7 @@ defmoduler MultiversesTest.Registry.KeysTest do
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
-      Multiverses.register(Registrty)
+      Multiverses.shard(Registrty)
       {:ok, inner_srv} = TestServer.start_link(reg, :foo)
 
       assert @registry.keys(reg, inner_srv) == [:foo]

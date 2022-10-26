@@ -8,7 +8,7 @@ defmoduler MultiversesTest.Registry.UnregisterTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.unregister/2" do
-    Multiverses.register(Registry)
+    Multiverses.shard(Registry)
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom()
@@ -18,8 +18,8 @@ defmoduler MultiversesTest.Registry.UnregisterTest do
 
     inner_pid =
       spawn_link(fn ->
-        Multiverses.register(Registry)
-        
+        Multiverses.shard(Registry)
+
         {:ok, inner_srv} = TestServer.start_link(reg, :foo)
 
         send(test_pid, :inner_started)

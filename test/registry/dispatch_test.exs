@@ -8,7 +8,7 @@ defmoduler MultiversesTest.Registry.DispatchTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.dispatch/4" do
-    Multiverses.register(Registry)
+    Multiverses.shard(Registry)
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom()
@@ -17,7 +17,7 @@ defmoduler MultiversesTest.Registry.DispatchTest do
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
-      Multiverses.register(Registry)
+      Multiverses.shard(Registry)
       assert 0 == @registry.count(reg)
 
       {:ok, _} = TestServer.start_link(reg, :foo)

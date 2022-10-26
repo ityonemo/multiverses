@@ -8,7 +8,7 @@ defmoduler MultiversesTest.Registry.UpdateValueTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.update_value/2" do
-    Multiverses.register(Registry)
+    Multiverses.shard(Registry)
     test_pid = self()
 
     reg = test_pid |> inspect |> String.to_atom()
@@ -17,7 +17,7 @@ defmoduler MultiversesTest.Registry.UpdateValueTest do
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
-      Multiverses.register(Registry)
+      Multiverses.shard(Registry)
       {:ok, inner_srv} = TestServer.start_link(reg, :foo)
 
       assert @registry.lookup(reg, :foo) == [{inner_srv, nil}]

@@ -29,26 +29,8 @@ defmodule MyModule do
 
   def my_function(...) do
     # uses Multiverses.Registry when enabled.
-    @registry.unegister(...)
+    @registry.unregister(...)
   end
-end
-```
-
-Some modules which change their implementation, may instead activate
-themselves via the `use` directive.  For example:
-
-```elixir
-defmodule MyServer do
-
-  @gen_server Application.config_env!(:my_app, GenServer)
-
-  use GenServer
-
-  def start_link(_) do
-    # uses Multiverses.GenServer instead of GenServer
-    @gen_server.start_link(...)
-  end
-
 end
 ```
 

@@ -6,7 +6,7 @@ defmoduler MultiversesTest.Application.PutTest do
   @application Multiverses.Application
 
   setup do
-    Multiverses.register(Application)
+    Multiverses.shard(Application)
   end
 
   describe "basic Application.put_env/3 sets an env variable" do

@@ -8,7 +8,7 @@ defmoduler MultiversesTest.Registry.CountTest do
   alias MultiversesTest.Registry.TestServer
 
   test "registry.count/1" do
-    Multiverses.register(Registry)
+    Multiverses.shard(Registry)
 
     test_pid = self()
 
@@ -21,7 +21,7 @@ defmoduler MultiversesTest.Registry.CountTest do
     assert 1 == @registry.count(reg)
 
     spawn_link(fn ->
-      Multiverses.register(Registry)
+      Multiverses.shard(Registry)
 
       assert 0 == @registry.count(reg)
 

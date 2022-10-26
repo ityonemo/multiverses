@@ -7,7 +7,7 @@ defmoduler MultiversesTest.Application.FetchTest do
   # see test_helper.exs for the :global environment variable
 
   setup do
-    Multiverses.register(Application)
+    Multiverses.shard(Application)
   end
 
   describe "basic Application.fetch_env/2 gets an env variable" do
