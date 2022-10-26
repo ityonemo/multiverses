@@ -103,14 +103,14 @@ defmodule Multiverses do
 
   alias Multiverses.Server
 
-  @type token :: pos_integer()
+  @type id :: pos_integer()
 
   @spec shard(module) :: :ok
   defdelegate shard(module), to: Server
 
-  @spec token(module) :: token
-  defdelegate token(module), to: Server
+  @spec id(module) :: id
+  defdelegate id(module), to: Server
 
-  @spec allow(module, pid | token, term) :: :ok
+  @spec allow(module, pid | id, term) :: :ok
   defdelegate allow(module, pid, allowed), to: Server
 end

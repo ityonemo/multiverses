@@ -32,17 +32,17 @@ defmodule Multiverses.Application do
              delete_env: 2, fetch_env: 2, fetch_env!: 2, get_env: 2, get_env: 3, put_env: 3}
 
   @spec ensured_get(atom, pos_integer) :: %{optional(pos_integer) => keyword}
-  defp ensured_get(app, token) do
+  defp ensured_get(app, id) do
     # Ensures the existence of the tree, returns the full multiverse KWL map
     case Application.fetch_env(app, Multiverses) do
-      {:ok, map} when is_map_key(map, token) ->
+      {:ok, map} when is_map_key(map, id) ->
         map
       {:ok, map} ->
-        multiverse_map = Map.put(map, token, [])
+        multiverse_map = Map.put(map, id, [])
         Application.put_env(app, Multiverses, multiverse_map)
         multiverse_map
       :error ->
-        new_map = %{token => []}
+        new_map = %{id => []}
         Application.put_env(app, Multiverses, new_map)
         new_map
     end
@@ -52,8 +52,8 @@ defmodule Multiverses.Application do
 
   @spec fetch_internal(atom, atom) :: {:ok, term} | unquote(@tombstone) | :error
   defp fetch_internal(app, key) do
-    token = Multiverses.token(Application)
-    env = ensured_get(app, token)[token]
+    id = Multiverses.id(Application)
+    env = ensured_get(app, id)[id]
     case Keyword.fetch(env, key) do
       {:ok, @tombstone} -> @tombstone
       {:ok, value} -> {:ok, value}
@@ -64,11 +64,11 @@ defmodule Multiverses.Application do
 
   @doc "See `Application.delete_env/2`."
   def delete_env(app, key) do
-    token = Multiverses.token(Application)
+    id = Multiverses.id(Application)
 
     new_envs = app
-    |> ensured_get(token)
-    |> put_in([token, key], @tombstone)
+    |> ensured_get(id)
+    |> put_in([id, key], @tombstone)
 
     Application.put_env(app, Multiverses, new_envs)
 
@@ -129,11 +129,11 @@ defmodule Multiverses.Application do
 
   @doc "See `Application.put_env/3`."
   def put_env(app, key, value) do
-    token = Multiverses.token(Application)
+    id = Multiverses.id(Application)
 
     multiverse_kv = app
-    |> ensured_get(token)
-    |> put_in([token, key], value)
+    |> ensured_get(id)
+    |> put_in([id, key], value)
 
     Application.put_env(app, Multiverses, multiverse_kv)
   end

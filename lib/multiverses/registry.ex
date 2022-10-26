@@ -34,13 +34,13 @@ defmodule Multiverses.Registry do
 
   require Multiverses
 
-  defp token, do: Multiverses.token(Registry)
+  defp id, do: Multiverses.id(Registry)
 
   def count(registry) do
     selection = [
       {
         {:"$1", :_, :_},
-        [{:==, {:element, 1, :"$1"}, {:const, token()}}],
+        [{:==, {:element, 1, :"$1"}, {:const, id()}}],
         [:"$1"]
       }
     ]
@@ -51,32 +51,32 @@ defmodule Multiverses.Registry do
   end
 
   def dispatch(registry, key, fun, opts \\ []) do
-    Registry.dispatch(registry, {token(), key}, fun, opts)
+    Registry.dispatch(registry, {id(), key}, fun, opts)
   end
 
   def keys(registry, pid) do
-    token = token()
+    id = id()
 
     registry
     |> Registry.keys(pid)
-    |> Enum.map(fn {^token, key} -> key end)
+    |> Enum.map(fn {^id, key} -> key end)
 
     # NB: there shouldn't be any pids that don't match this universe.
   end
 
   def lookup(registry, key) do
-    Registry.lookup(registry, {token(), key})
+    Registry.lookup(registry, {id(), key})
   end
 
   @doc """
   Registers the calling process with the Registry.  Works as `Registry.register/3` does.
   """
   def register(registry, key, value) do
-    Registry.register(registry, {token(), key}, value)
+    Registry.register(registry, {id(), key}, value)
   end
 
   def select(registry, spec) do
-    universe = token()
+    universe = id()
 
     new_spec =
       Enum.map(spec, fn {match, filters, result} ->
@@ -132,13 +132,13 @@ defmodule Multiverses.Registry do
   end
 
   def unregister(registry, key) do
-    Registry.unregister(registry, {token(), key})
+    Registry.unregister(registry, {id(), key})
   end
 
   def update_value(registry, key, callback) do
-    Registry.update_value(registry, {token(), key}, callback)
+    Registry.update_value(registry, {id(), key}, callback)
   end
 
-  def whereis_name({registry, key}), do: Registry.whereis_name({registry, {token(), key}})
-  def whereis_name({registry, key, _value}), do: Registry.whereis_name({registry, {token(), key}})
+  def whereis_name({registry, key}), do: Registry.whereis_name({registry, {id(), key}})
+  def whereis_name({registry, key, _value}), do: Registry.whereis_name({registry, {id(), key}})
 end

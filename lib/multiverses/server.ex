@@ -18,8 +18,8 @@ defmodule Multiverses.Server do
 
   # API
   @spec shard(module) :: :ok
-  @spec token(module) :: Multiverse.token()
-  @spec allow(module, pid | Multiverse.token(), term) :: :ok
+  @spec id(module) :: Multiverse.id()
+  @spec allow(module, pid | Multiverse.id(), term) :: :ok
 
   @this {:global, __MODULE__}
 
@@ -36,31 +36,33 @@ defmodule Multiverses.Server do
     {:ok, ref}
   end
 
+  # API IMPLEMENTATIONS
+
   def shard(module) do
     GenServer.call(@this, {:shard, module, self()})
   end
 
   defp shard_impl(module, pid, _from, table) do
-    token = :erlang.phash2({module, pid})
-    :ets.insert(table, {{module, pid}, token})
+    id = :erlang.phash2({module, pid})
+    :ets.insert(table, {{module, pid}, id})
     {:reply, :ok, table}
   end
 
-  def token(module) do
+  def id(module) do
     callers = [self() | Process.get(:"$callers", [])]
 
     if node(:global.whereis_name(__MODULE__)) === node() do
-      get_token(__MODULE__, module, callers)
+      get_id(__MODULE__, module, callers)
     else
-      GenServer.call(@this, {:token, module, callers})
+      GenServer.call(@this, {:id, module, callers})
     end
   end
 
-  defp token_impl(module, callers, _from, table) do
-    {:reply, get_token(table, module, callers), table}
+  defp id_impl(module, callers, _from, table) do
+    {:reply, get_id(table, module, callers), table}
   end
 
-  defp get_token(table, module, callers) do
+  defp get_id(table, module, callers) do
     :ets.select(table, [{{:"$1", :"$2"}, [], [{{:"$1", :"$2"}}]}])
 
     table
@@ -90,12 +92,12 @@ defmodule Multiverses.Server do
              {{{:"$1", :"$2"}, :"$3"}, [{:==, :"$1", module}, {:==, :"$2", {:const, owner_pid}}],
               [:"$3"]}
            ],
-           [token] <- :ets.select(table, selection) do
-        :ets.insert(table, {{module, allow_pid}, token})
+           [id] <- :ets.select(table, selection) do
+        :ets.insert(table, {{module, allow_pid}, id})
         :ok
       else
-        token when is_integer(token) ->
-          :ets.insert(table, {{module, allow_pid}, token})
+        id when is_integer(id) ->
+          :ets.insert(table, {{module, allow_pid}, id})
           :ok
 
         [] ->
@@ -120,8 +122,8 @@ defmodule Multiverses.Server do
   def handle_call({:shard, module, pid}, from, table),
     do: shard_impl(module, pid, from, table)
 
-  def handle_call({:token, module, callers}, from, table),
-    do: token_impl(module, callers, from, table)
+  def handle_call({:id, module, callers}, from, table),
+    do: id_impl(module, callers, from, table)
 
   def handle_call({:allow, module, owner, allowed}, from, table),
     do: allow_impl(module, owner, allowed, from, table)
