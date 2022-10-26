@@ -5,6 +5,10 @@ defmoduler MultiversesTest.Application.PutTest do
 
   @application Multiverses.Application
 
+  setup do
+    Multiverses.register(Application)
+  end
+
   describe "basic Application.put_env/3 sets an env variable" do
     test "that can be retrieved" do
       @application.put_env(:multiverses, :foo, :bar)

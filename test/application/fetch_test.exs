@@ -6,6 +6,10 @@ defmoduler MultiversesTest.Application.FetchTest do
 
   # see test_helper.exs for the :global environment variable
 
+  setup do
+    Multiverses.register(Application)
+  end
+
   describe "basic Application.fetch_env/2 gets an env variable" do
     test "that was set by the global environment system" do
       assert {:ok, :value} == @application.fetch_env(:multiverses, :global)

@@ -5,6 +5,10 @@ defmoduler MultiversesTest.Application.GetTest do
 
   @application Multiverses.Application
 
+  setup do
+    Multiverses.register(Application)
+  end
+
   # see test_helper.exs for the :global environment variable
 
   describe "basic Application.get_env/2 gets an env variable" do

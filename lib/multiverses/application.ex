@@ -3,7 +3,7 @@ defmodule Multiverses.Application do
   This module is intended to be a drop-in replacement for `Application`.
 
   When you drop this module in, functions relating to runtime environment
-  variables have been substituted with equivalent macros that respect the
+  variables have been substituted with equivalent functions that respect the
   Multiverse pattern.
 
   ## Warning
@@ -22,71 +22,102 @@ defmodule Multiverses.Application do
 
   ## How it works
 
-  This module works by substituting the `app` atom with the
-  `{multiverse, app}` tuple.  If that tuple isn't found, it falls back
-  on the `app` atom for its ETS table lookup.
   """
 
   use Multiverses.Clone,
     module: Application,
     except: [delete_env: 2, fetch_env!: 2, fetch_env: 2, get_env: 2, get_env: 3, put_env: 3]
 
-  # we're abusing the application key format, which works because ETS tables
-  # are what back the application environment variables, and the system
-  # tolerates "other terms", even though that's now how they are typespecced
-  # out.
   @dialyzer {:nowarn_function,
              delete_env: 2, fetch_env: 2, fetch_env!: 2, get_env: 2, get_env: 3, put_env: 3}
 
-  defp universe(key) do
-    require Multiverses
-    {Multiverses.self(), key}
+  @spec ensured_get(atom, pos_integer) :: %{optional(pos_integer) => keyword}
+  defp ensured_get(app, token) do
+    # Ensures the existence of the tree, returns the full multiverse KWL map
+    case Application.fetch_env(app, Multiverses) do
+      {:ok, map} when is_map_key(map, token) ->
+        map
+      {:ok, map} ->
+        multiverse_map = Map.put(map, token, [])
+        Application.put_env(app, Multiverses, multiverse_map)
+        multiverse_map
+      :error ->
+        new_map = %{token => []}
+        Application.put_env(app, Multiverses, new_map)
+        new_map
+    end
   end
+
+  @tombstone :"$multiverse-tombstone"
+
+  @spec fetch_internal(atom, atom) :: {:ok, term} | unquote(@tombstone) | :error
+  defp fetch_internal(app, key) do
+    token = Multiverses.token(Application)
+    env = ensured_get(app, token)[token]
+    case Keyword.fetch(env, key) do
+      {:ok, @tombstone} -> @tombstone
+      {:ok, value} -> {:ok, value}
+      :error -> :error
+    end
+  end
+
 
   @doc "See `Application.delete_env/2`."
   def delete_env(app, key) do
-    case Application.fetch_env(app, universe(key)) do
-      {:ok, _} ->
-        Application.delete_env(app, universe(key))
+    token = Multiverses.token(Application)
 
-      :error ->
-        Application.put_env(app, universe(key), :"$tombstone")
-    end
+    new_envs = app
+    |> ensured_get(token)
+    |> put_in([token, key], @tombstone)
+
+    Application.put_env(app, Multiverses, new_envs)
+
+    :ok
   end
 
   @doc "See `Application.fetch_env/2`."
   def fetch_env(app, key) do
-    case Application.fetch_env(app, universe(key)) do
-      {:ok, :"$tombstone"} ->
-        :error
-
-      result = {:ok, _} ->
-        result
-
+    case fetch_internal(app, key) do
+      @tombstone -> :error
       :error ->
         Application.fetch_env(app, key)
+      value -> value
     end
   end
 
   @doc "See `Application.fetch_env!/2`."
   def fetch_env!(app, key) do
-    case Application.fetch_env(app, universe(key)) do
-      {:ok, env} ->
-        env
+    case fetch_env(app, key) do
+      {:ok, value} ->
+        value
 
       :error ->
-        Application.fetch_env!(app, key)
+        raise ArgumentError,
+              "could not fetch application environment #{inspect(key)} for application " <>
+                "#{inspect(app)} #{fetch_env_failed_reason(app, key)}"
+    end
+  end
+
+  defp fetch_env_failed_reason(app, key) do
+    vsn = :application.get_key(app, :vsn)
+
+    case vsn do
+      {:ok, _} ->
+        "because configuration at #{inspect(key)} was not set"
+
+      :undefined ->
+        "because the application was not loaded nor configured"
     end
   end
 
   @doc "See `Application.get_env/2`."
   def get_env(app, key) do
-    Multiverses.Application.get_env(app, key, nil)
+    get_env(app, key, nil)
   end
 
   @doc "See `Application.get_env/3`."
   def get_env(app, key, default) do
-    case Multiverses.Application.fetch_env(app, key) do
+    case fetch_env(app, key) do
       {:ok, env} ->
         env
 
@@ -98,6 +129,12 @@ defmodule Multiverses.Application do
 
   @doc "See `Application.put_env/3`."
   def put_env(app, key, value) do
-    Application.put_env(app, universe(key), value)
+    token = Multiverses.token(Application)
+
+    multiverse_kv = app
+    |> ensured_get(token)
+    |> put_in([token, key], value)
+
+    Application.put_env(app, Multiverses, multiverse_kv)
   end
 end

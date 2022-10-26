@@ -5,6 +5,10 @@ defmoduler MultiversesTest.Application.DeleteTest do
 
   @application Multiverses.Application
 
+  setup do
+    Multiverses.register(Application)
+  end
+
   # see test_helper.exs for the :global environment variable
 
   describe "basic Application.delete_env/2 deletes an env variable" do
