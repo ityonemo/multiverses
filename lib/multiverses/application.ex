@@ -61,7 +61,6 @@ defmodule Multiverses.Application do
     end
   end
 
-
   @doc "See `Application.delete_env/2`."
   def delete_env(app, key) do
     id = Multiverses.id(Application)

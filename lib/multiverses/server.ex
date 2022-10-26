@@ -14,6 +14,8 @@ defmodule Multiverses.AppSupervisor do
 end
 
 defmodule Multiverses.Server do
+  @moduledoc "core server for managing multiverse partitions"
+
   use GenServer
 
   # API

@@ -79,6 +79,7 @@ defmodule Multiverses.Registry do
     universe = id()
 
     new_spec =
+      # TODO: refactor this monstrosity
       Enum.map(spec, fn {match, filters, result} ->
         {new_match, match_var} =
           case match do
