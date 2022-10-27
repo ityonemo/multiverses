@@ -16,12 +16,18 @@ end
 defmodule Multiverses.Server do
   @moduledoc "core server for managing multiverse partitions"
 
+  alias Multiverses.UnexpectedCallError
+
   use GenServer
 
   # API
   @spec shard(module) :: :ok
   @spec id(module) :: Multiverse.id()
   @spec allow(module, pid | Multiverse.id(), term) :: :ok
+
+  # private api
+  @spec id_pair(module) :: {pid, Multiverse.id()} | nil
+  @spec id_pair(:ets.table(), module, [pid]) :: {pid, Multiverse.id()} | nil
 
   @this {:global, __MODULE__}
 
@@ -40,33 +46,54 @@ defmodule Multiverses.Server do
 
   # API IMPLEMENTATIONS
 
-  def shard(module) do
-    GenServer.call(@this, {:shard, module, self()})
+  def shard(module_or_modules) do
+    modules = List.wrap(module_or_modules)
+
+    # check to make sure that the shard isn't already assigned.
+    Enum.each(modules, fn module ->
+      case id_pair(module) do
+        nil ->
+          :ok
+
+        {pid, _} ->
+          raise UnexpectedCallError,
+                "Multiverse shard for #{inspect(module)} already exists for pid #{inspect(self())}#{format_pid_name(pid)}"
+      end
+    end)
+
+    GenServer.call(@this, {:shard, modules, self()})
   end
 
-  defp shard_impl(module, pid, _from, table) do
-    id = :erlang.phash2({module, pid})
-    :ets.insert(table, {{module, pid}, id})
+  defp shard_impl(modules, pid, _from, table) do
+    tuples = Enum.map(modules, &{{&1, pid}, :erlang.phash2({&1, pid})})
+    :ets.insert(table, tuples)
     {:reply, :ok, table}
   end
 
   def id(module) do
+    pair =
+      id_pair(module) ||
+        raise UnexpectedCallError,
+              "no shard defined for module #{inspect(module)} in #{format_process()}"
+
+    elem(pair, 1)
+  end
+
+  defp id_pair(module) do
     callers = [self() | Process.get(:"$callers", [])]
 
     if node(:global.whereis_name(__MODULE__)) === node() do
-      get_id(__MODULE__, module, callers)
+      id_pair(__MODULE__, module, callers)
     else
-      GenServer.call(@this, {:id, module, callers})
+      GenServer.call(@this, {:id_pair, module, callers})
     end
   end
 
-  defp id_impl(module, callers, _from, table) do
-    {:reply, get_id(table, module, callers), table}
+  defp id_pair_impl(module, callers, _from, table) do
+    {:reply, id_pair(table, module, callers), table}
   end
 
-  defp get_id(table, module, callers) do
-    :ets.select(table, [{{:"$1", :"$2"}, [], [{{:"$1", :"$2"}}]}])
-
+  defp id_pair(table, module, callers) do
     table
     |> :ets.select(select(module, callers))
     |> List.first()
@@ -79,11 +106,18 @@ defmodule Multiverses.Server do
       |> Enum.map(&{:==, :"$2", &1})
       |> Enum.reduce(&{:or, &1, &2})
 
-    [{{{:"$1", :"$2"}, :"$3"}, [{:==, :"$1", module}, callers_chain], [:"$3"]}]
+    [{{{:"$1", :"$2"}, :"$3"}, [{:==, :"$1", module}, callers_chain], [{{:"$2", :"$3"}}]}]
   end
 
-  def allow(module, owner, allow),
-    do: GenServer.call(@this, {:allow, module, owner, allow})
+  def allow(module, owner, allow) do
+    case GenServer.call(@this, {:allow, module, owner, allow}) do
+      :ok ->
+        :ok
+
+      :error ->
+        raise "Multiverses.allow/3 attempted to find the shard of #{inspect(owner)} but there was none"
+    end
+  end
 
   defp allow_impl(module, owner, allow, _from, table) do
     allow_pid = to_pid(allow)
@@ -103,7 +137,6 @@ defmodule Multiverses.Server do
           :ok
 
         [] ->
-          # TODO: punt this to a not found error.
           :error
       end
 
@@ -124,11 +157,31 @@ defmodule Multiverses.Server do
   def handle_call({:shard, module, pid}, from, table),
     do: shard_impl(module, pid, from, table)
 
-  def handle_call({:id, module, callers}, from, table),
-    do: id_impl(module, callers, from, table)
+  def handle_call({:id_pair, module, callers}, from, table),
+    do: id_pair_impl(module, callers, from, table)
 
   def handle_call({:allow, module, owner, allowed}, from, table),
     do: allow_impl(module, owner, allowed, from, table)
 
   def handle_call(:dump, from, table), do: dump_impl(from, table)
+
+  # UTILITIES
+
+  defp format_process do
+    callers =
+      :"$callers"
+      |> Process.get()
+      |> List.wrap()
+
+    "process #{inspect(self())}" <>
+      if Enum.empty?(callers) do
+        ""
+      else
+        " (or in its callers #{inspect(callers)})"
+      end
+  end
+
+  defp format_pid_name(pid) do
+    if self() != pid, do: " (in parent #{pid})"
+  end
 end

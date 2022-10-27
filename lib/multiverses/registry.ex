@@ -29,7 +29,7 @@ defmodule Multiverses.Registry do
       # these two functions are deprecated.
       start_link: 3,
       # these two functions are deprecated.
-      start_link: 2,
+      start_link: 2
     ]
 
   require Multiverses
@@ -79,7 +79,6 @@ defmodule Multiverses.Registry do
     universe = id()
 
     new_spec =
-      # TODO: refactor this monstrosity
       Enum.map(spec, fn {match, filters, result} ->
         {new_match, match_var} =
           case match do
@@ -95,42 +94,38 @@ defmodule Multiverses.Registry do
         # NB: this needs to be a lambda so that Multiverses can be compile-time
         # only.
 
-        adjust = fn
-          ^match_var, _self ->
-            {:element, 2, match_var}
-
-          list, self when is_list(list) ->
-            Enum.map(list, &self.(&1, self))
-
-          tuple, self when is_tuple(tuple) ->
-            tuple
-            |> Tuple.to_list()
-            |> self.(self)
-            |> List.to_tuple()
-
-          map, self when is_map(map) ->
-            map
-            |> Enum.map(fn
-              {key, value} ->
-                {self.(key, self), self.(value, self)}
-            end)
-            |> Enum.into(%{})
-
-          any, _self ->
-            any
-        end
-
         new_filters =
-          adjust.(filters, adjust) ++
+          adjust(filters, match_var) ++
             [{:==, {:element, 1, match_var}, {:const, universe}}]
 
-        new_result = adjust.(result, adjust)
+        new_result = adjust(result, match_var)
 
         {new_match, new_filters, new_result}
       end)
 
     Registry.select(registry, new_spec)
   end
+
+  defp adjust(match_var, match_var) do
+    {:element, 2, match_var}
+  end
+
+  defp adjust(list, match_var) when is_list(list) do
+    Enum.map(list, &adjust(&1, match_var))
+  end
+
+  defp adjust(tuple, match_var) when is_tuple(tuple) do
+    tuple
+    |> Tuple.to_list()
+    |> adjust(match_var)
+    |> List.to_tuple()
+  end
+
+  defp adjust(map, match_var) when is_map(map) do
+    Map.new(map, fn {k, v} -> {adjust(k, match_var), adjust(v, match_var)} end)
+  end
+
+  defp adjust(any, _), do: any
 
   def unregister(registry, key) do
     Registry.unregister(registry, {id(), key})

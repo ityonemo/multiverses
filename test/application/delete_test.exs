@@ -43,6 +43,7 @@ defmoduler MultiversesTest.Application.DeleteTest do
       test_pid = self()
 
       spawn(fn ->
+        Multiverses.shard(Application)
         @application.delete_env(:multiverses, :global)
         send(test_pid, :unblock)
       end)

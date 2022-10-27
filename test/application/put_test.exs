@@ -26,6 +26,7 @@ defmoduler MultiversesTest.Application.PutTest do
       test_pid = self()
 
       spawn(fn ->
+        Multiverses.shard(Application)
         @application.put_env(:multiverses, :foo, :bar)
         send(test_pid, :unblock)
       end)

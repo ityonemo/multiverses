@@ -34,7 +34,7 @@ defmodule Multiverses do
   ### In your code
 
   For example, if you would like to use the `Multiverses` version of the `Application`
-  module, you should add the following lines:
+  module (`Multiverses.Application`), you should add the following lines:
 
   To `config/config.exs`:
 
@@ -105,12 +105,24 @@ defmodule Multiverses do
 
   @type id :: pos_integer()
 
-  @spec shard(module) :: :ok
-  defdelegate shard(module), to: Server
+  @spec shard(module | [module]) :: :ok
+  @doc """
+  """
+  defdelegate shard(modules), to: Server
 
   @spec id(module) :: id
+  @doc """
+  """
   defdelegate id(module), to: Server
 
   @spec allow(module, pid | id, term) :: :ok
+  @doc """
+  """
   defdelegate allow(module, pid, allowed), to: Server
+
+  # errors
+
+  defmodule UnexpectedCallError do
+    defexception [:message]
+  end
 end

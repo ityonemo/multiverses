@@ -17,7 +17,7 @@ defmoduler MultiversesTest.Registry.KeysTest do
     {:ok, outer_srv} = TestServer.start_link(reg, :foo)
 
     spawn_link(fn ->
-      Multiverses.shard(Registrty)
+      Multiverses.shard(Registry)
       {:ok, inner_srv} = TestServer.start_link(reg, :foo)
 
       assert @registry.keys(reg, inner_srv) == [:foo]

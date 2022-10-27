@@ -40,6 +40,7 @@ defmoduler MultiversesTest.Application.FetchTest do
       test_pid = self()
 
       spawn(fn ->
+        Multiverses.shard(Application)
         @application.put_env(:multiverses, :global, :overlay)
         send(test_pid, :unblock)
       end)

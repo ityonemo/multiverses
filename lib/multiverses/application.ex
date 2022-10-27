@@ -37,10 +37,12 @@ defmodule Multiverses.Application do
     case Application.fetch_env(app, Multiverses) do
       {:ok, map} when is_map_key(map, id) ->
         map
+
       {:ok, map} ->
         multiverse_map = Map.put(map, id, [])
         Application.put_env(app, Multiverses, multiverse_map)
         multiverse_map
+
       :error ->
         new_map = %{id => []}
         Application.put_env(app, Multiverses, new_map)
@@ -54,6 +56,7 @@ defmodule Multiverses.Application do
   defp fetch_internal(app, key) do
     id = Multiverses.id(Application)
     env = ensured_get(app, id)[id]
+
     case Keyword.fetch(env, key) do
       {:ok, @tombstone} -> @tombstone
       {:ok, value} -> {:ok, value}
@@ -65,9 +68,10 @@ defmodule Multiverses.Application do
   def delete_env(app, key) do
     id = Multiverses.id(Application)
 
-    new_envs = app
-    |> ensured_get(id)
-    |> put_in([id, key], @tombstone)
+    new_envs =
+      app
+      |> ensured_get(id)
+      |> put_in([id, key], @tombstone)
 
     Application.put_env(app, Multiverses, new_envs)
 
@@ -77,10 +81,14 @@ defmodule Multiverses.Application do
   @doc "See `Application.fetch_env/2`."
   def fetch_env(app, key) do
     case fetch_internal(app, key) do
-      @tombstone -> :error
+      @tombstone ->
+        :error
+
       :error ->
         Application.fetch_env(app, key)
-      value -> value
+
+      value ->
+        value
     end
   end
 
@@ -130,9 +138,10 @@ defmodule Multiverses.Application do
   def put_env(app, key, value) do
     id = Multiverses.id(Application)
 
-    multiverse_kv = app
-    |> ensured_get(id)
-    |> put_in([id, key], value)
+    multiverse_kv =
+      app
+      |> ensured_get(id)
+      |> put_in([id, key], value)
 
     Application.put_env(app, Multiverses, multiverse_kv)
   end
