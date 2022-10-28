@@ -21,10 +21,11 @@ defmodule Multiverses.Server do
   use GenServer
 
   # API
-  @spec shard(module) :: [{module, Multiverse.id}]
+  @spec shard(module) :: [{module, Multiverse.id()}]
   @spec shards(pid) :: [{module, Multiverse.id()}]
   @spec id(module, keyword) :: Multiverse.id()
-  @spec allow(module, pid | Multiverse.id(), term) :: :ok
+  @spec allow(module, pid | Multiverse.id(), term) :: :error | [{{module, pid}, Multiverse.id()}]
+  @spec allow([{module, Multiverse.id()}], term) :: :error | [{{module, pid}, Multiverse.id()}]
   @spec all(module) :: [Multiverse.id()]
   @spec clear(module) :: :ok
 
@@ -47,7 +48,7 @@ defmodule Multiverses.Server do
 
   # API IMPLEMENTATIONS
 
-  def shard(module_or_modules) do
+  def shard(module_or_modules) when is_list(module_or_modules) or is_atom(module_or_modules) do
     this = self()
     modules = List.wrap(module_or_modules)
 
@@ -63,15 +64,9 @@ defmodule Multiverses.Server do
       end
     end)
 
-    result = GenServer.call(__MODULE__, {:shard, modules, this})
-
-    Node.list
-    |> Task.async_stream(fn node ->
-      :rpc.call(node, __MODULE__, :_import, [result])
-    end)
-    |> Stream.run
-
-    result
+    __MODULE__
+    |> GenServer.call({:shard, modules, this})
+    |> distribute_import
   end
 
   def shards(pid) do
@@ -121,12 +116,18 @@ defmodule Multiverses.Server do
 
   def allow(module, owner, allow) do
     case GenServer.call(__MODULE__, {:allow, module, owner, allow}) do
-      :ok ->
-        :ok
-
       :error ->
         raise "Multiverses.allow/3 attempted to find the shard of #{inspect(owner)} but there was none"
+
+      list when is_list(list) ->
+        distribute_import(list)
     end
+  end
+
+  def allow(modulespec, allow) do
+    __MODULE__
+    |> GenServer.call({:allow, modulespec, allow})
+    |> distribute_import
   end
 
   def _import(imports) do
@@ -148,18 +149,27 @@ defmodule Multiverses.Server do
               [:"$3"]}
            ],
            [id] <- :ets.select(table, selection) do
-        :ets.insert(table, {{module, allow_pid}, id})
-        :ok
+        insertion = {{module, allow_pid}, id}
+        :ets.insert(table, insertion)
+        [insertion]
       else
         id when is_integer(id) ->
-          :ets.insert(table, {{module, allow_pid}, id})
-          :ok
+          insertion = {{module, allow_pid}, id}
+          :ets.insert(table, insertion)
+          [insertion]
 
         [] ->
           :error
       end
 
     {:reply, result, table}
+  end
+
+  defp allow_impl(modulespec, allow, _from, table) do
+    allow_pid = to_pid(allow)
+    insertion = Enum.map(modulespec, fn {module, shard_id} -> {{module, allow_pid}, shard_id} end)
+    :ets.insert(table, insertion)
+    {:reply, insertion, table}
   end
 
   defp to_pid(pid) when is_pid(pid), do: pid
@@ -184,6 +194,18 @@ defmodule Multiverses.Server do
   defp dump_impl(_from, table),
     do: {:reply, :ets.select(table, [{{:"$1", :"$2"}, [], [{{:"$1", :"$2"}}]}]), table}
 
+  # COMMON UTILITIES
+
+  defp distribute_import(list) do
+    Node.list()
+    |> Task.async_stream(fn node ->
+      :rpc.call(node, __MODULE__, :_import, [list])
+    end)
+    |> Stream.run()
+
+    list
+  end
+
   # ROUTER
 
   def handle_call({:shard, module, pid}, from, table),
@@ -192,13 +214,16 @@ defmodule Multiverses.Server do
   def handle_call({:allow, module, owner, allowed}, from, table),
     do: allow_impl(module, owner, allowed, from, table)
 
+  def handle_call({:allow, modulespec, allowed}, from, table),
+    do: allow_impl(modulespec, allowed, from, table)
+
   def handle_call({:_import, imports}, from, table), do: _import_impl(imports, from, table)
 
   def handle_call(:dump, from, table), do: dump_impl(from, table)
 
   def handle_call({:clear, module, who}, from, table), do: clear_impl(module, who, from, table)
 
-  # UTILITIES
+  # DEBUG UTILITIES
 
   defp format_process do
     callers =

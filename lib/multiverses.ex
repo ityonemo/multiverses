@@ -136,10 +136,15 @@ defmodule Multiverses do
     end
   end
 
-  #@spec allow([{module, pid | id}], term) :: :ok
+  @spec allow(module, pid | id, term) :: [{{module, pid}, id}]
   @doc """
   """
   defdelegate allow(module, pid, allowed), to: Server
+
+  @spec allow([{module, id}], term) :: [{{module, pid}, id}]
+  @doc """
+  """
+  defdelegate allow(modules, allowed), to: Server
 
   ## utility functions
   defdelegate all(module), to: Server
