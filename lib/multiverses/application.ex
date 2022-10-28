@@ -54,26 +54,30 @@ defmodule Multiverses.Application do
 
   @spec fetch_internal(atom, atom) :: {:ok, term} | unquote(@tombstone) | :error
   defp fetch_internal(app, key) do
-    id = Multiverses.id(Application)
-    env = ensured_get(app, id)[id]
+    trans(fn ->
+      id = Multiverses.id(Application)
+      env = ensured_get(app, id)[id]
 
-    case Keyword.fetch(env, key) do
-      {:ok, @tombstone} -> @tombstone
-      {:ok, value} -> {:ok, value}
-      :error -> :error
-    end
+      case Keyword.fetch(env, key) do
+        {:ok, @tombstone} -> @tombstone
+        {:ok, value} -> {:ok, value}
+        :error -> :error
+      end
+    end)
   end
 
   @doc "See `Application.delete_env/2`."
   def delete_env(app, key) do
     id = Multiverses.id(Application)
 
-    new_envs =
-      app
-      |> ensured_get(id)
-      |> put_in([id, key], @tombstone)
+    trans(fn ->
+      new_envs =
+        app
+        |> ensured_get(id)
+        |> put_in([id, key], @tombstone)
 
-    Application.put_env(app, Multiverses, new_envs)
+      Application.put_env(app, Multiverses, new_envs)
+    end)
 
     :ok
   end
@@ -136,13 +140,19 @@ defmodule Multiverses.Application do
 
   @doc "See `Application.put_env/3`."
   def put_env(app, key, value) do
-    id = Multiverses.id(Application)
+    trans(fn ->
+      id = Multiverses.id(Application)
 
-    multiverse_kv =
-      app
-      |> ensured_get(id)
-      |> put_in([id, key], value)
+      multiverse_kv =
+        app
+        |> ensured_get(id)
+        |> put_in([id, key], value)
 
-    Application.put_env(app, Multiverses, multiverse_kv)
+      Application.put_env(app, Multiverses, multiverse_kv)
+    end)
+  end
+
+  defp trans(fun) do
+    :global.trans({__MODULE__, self()}, fun, [Node.self()])
   end
 end

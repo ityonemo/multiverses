@@ -22,8 +22,11 @@ defmodule Multiverses.Server do
 
   # API
   @spec shard(module) :: :ok
-  @spec id(module) :: Multiverse.id()
+  @spec shards() :: [{module, Multiverse.id()}]
+  @spec id(module, keyword) :: Multiverse.id()
   @spec allow(module, pid | Multiverse.id(), term) :: :ok
+  @spec all(module) :: [Multiverse.id()]
+  @spec clear(module) :: :ok
 
   # private api
   @spec id_pair(module) :: {pid, Multiverse.id()} | nil
@@ -64,17 +67,26 @@ defmodule Multiverses.Server do
     GenServer.call(@this, {:shard, modules, self()})
   end
 
+  def shards do
+    :ets.select(__MODULE__, [
+      {{{:"$1", :"$2"}, :"$3"}, [{:==, :"$2", {:const, self()}}], [{{:"$1", :"$3"}}]}
+    ])
+  end
+
   defp shard_impl(modules, pid, _from, table) do
     tuples = Enum.map(modules, &{{&1, pid}, :erlang.phash2({&1, pid})})
     :ets.insert(table, tuples)
     {:reply, :ok, table}
   end
 
-  def id(module) do
-    pair =
-      id_pair(module) ||
-        raise UnexpectedCallError,
-              "no shard defined for module #{inspect(module)} in #{format_process()}"
+  def id(module, options) do
+    pair = id_pair(module)
+    strict = Keyword.get(options, :strict, true)
+
+    unless not strict or pair do
+      raise UnexpectedCallError,
+            "no shard defined for module #{inspect(module)} in #{format_process()}"
+    end
 
     elem(pair, 1)
   end
@@ -147,6 +159,19 @@ defmodule Multiverses.Server do
   defp to_pid(atom) when is_atom(atom), do: :erlang.whereis(atom)
   defp to_pid({module, key}), do: module.whereis_name(key)
 
+  def all(module) do
+    __MODULE__
+    |> :ets.select([{{{:"$1", :_}, :"$2"}, [{:==, :"$1", module}], [:"$2"]}])
+    |> Enum.uniq()
+  end
+
+  def clear(module), do: GenServer.call(@this, {:clear, module, self()})
+
+  defp clear_impl(module, who, _from, table) do
+    :ets.delete(table, {module, who})
+    {:reply, :ok, table}
+  end
+
   def _dump, do: GenServer.call(@this, :dump)
 
   defp dump_impl(_from, table),
@@ -164,6 +189,8 @@ defmodule Multiverses.Server do
     do: allow_impl(module, owner, allowed, from, table)
 
   def handle_call(:dump, from, table), do: dump_impl(from, table)
+
+  def handle_call({:clear, module, who}, from, table), do: clear_impl(module, who, from, table)
 
   # UTILITIES
 

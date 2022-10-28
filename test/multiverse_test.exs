@@ -28,5 +28,12 @@ defmodule MultiversesTest do
       assert Multiverses.id(Application)
       assert Multiverses.id(Registry)
     end
+
+    test "and both will be known to the shards function" do
+      Multiverses.shard([Application, Registry])
+      assert [{Application, application_id}, {Registry, registry_id}] = Enum.sort(Multiverses.shards())
+      assert application_id == Multiverses.id(Application)
+      assert registry_id == Multiverses.id(Registry)
+    end
   end
 end

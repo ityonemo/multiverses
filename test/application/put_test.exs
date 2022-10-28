@@ -31,7 +31,7 @@ defmoduler MultiversesTest.Application.PutTest do
         send(test_pid, :unblock)
       end)
 
-      assert_receive :unblock
+      assert_receive :unblock, 500
       assert nil == Elixir.Application.get_env(:multiverses, :foo)
     end
 

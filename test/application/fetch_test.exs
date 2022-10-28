@@ -45,7 +45,7 @@ defmoduler MultiversesTest.Application.FetchTest do
         send(test_pid, :unblock)
       end)
 
-      assert_receive :unblock
+      assert_receive :unblock, 500
 
       assert {:ok, :value} == @application.fetch_env(:multiverses, :global)
     end

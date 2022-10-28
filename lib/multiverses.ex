@@ -110,15 +110,46 @@ defmodule Multiverses do
   """
   defdelegate shard(modules), to: Server
 
+  @spec shards :: [{module, id}]
+  defdelegate shards, to: Server
+
   @spec id(module) :: id
+  @spec id(module, options :: keyword) :: id | nil
   @doc """
+  Obtains the universe id for the current process.
+
+  This is found by checking process and the entries in the `:$callers` process dictionary
+  entry to find if any of them are registered.
+
+  If the current process is not registered, then it raises `Multiverses.UnexpectedCallError`
+
+  ### Options
+
+  - `:strict` (defaults to `true`): if `false`, returns `nil`, instead of crashing.
   """
-  defdelegate id(module), to: Server
+  def id(module, options \\ []) do
+    if id = Process.get({Multiverses, module}) do
+      id
+    else
+      Server.id(module, options)
+    end
+  end
 
   @spec allow(module, pid | id, term) :: :ok
   @doc """
   """
   defdelegate allow(module, pid, allowed), to: Server
+
+  ## utility functions
+  defdelegate all(module), to: Server
+
+  @spec allow_for(module, id, (() -> result)) :: result when result: term
+  def allow_for(module, id, fun) do
+    Process.put({Multiverses, module}, id)
+    result = fun.()
+    Process.delete({Multiverses, module})
+    result
+  end
 
   # errors
 

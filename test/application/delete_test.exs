@@ -48,7 +48,7 @@ defmoduler MultiversesTest.Application.DeleteTest do
         send(test_pid, :unblock)
       end)
 
-      assert_receive :unblock
+      assert_receive :unblock, 500
 
       assert :value == @application.get_env(:multiverses, :global)
     end
