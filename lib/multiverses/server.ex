@@ -34,6 +34,7 @@ defmodule Multiverses.Server do
   @spec id_pair(:ets.table(), module, [pid]) :: {pid, Multiverse.id()} | nil
 
   # STARTUP BOILERPLATE
+  @doc false
   def start_link(_) do
     case GenServer.start_link(__MODULE__, [], name: __MODULE__) do
       {:error, {:already_started, _}} -> :ignore
@@ -41,6 +42,7 @@ defmodule Multiverses.Server do
     end
   end
 
+  @doc false
   def init(_) do
     ref = :ets.new(__MODULE__, [:named_table, :set, :protected, read_concurrency: true])
     {:ok, ref}

@@ -1,4 +1,5 @@
 defmodule Peer do
+  @moduledoc false
   defmacro call(bindings \\ [], do: block) do
     fun_block =
       Macro.escape(

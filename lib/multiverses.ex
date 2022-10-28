@@ -107,11 +107,17 @@ defmodule Multiverses do
 
   @spec shard(module | [module]) :: [{module, id}]
   @doc """
+  creates a new shard for a particular domain module and assigns this pid to the
+  shard.  You can batch assigning multiple shards as well.
   """
   defdelegate shard(modules), to: Server
 
   @spec shards :: [{module, id}]
   @spec shards(pid) :: [{module, id}]
+  @doc """
+  returns a list of multiverse domain modules and the respective shard-ids associated
+  with those domain modules.
+  """
   defdelegate shards(pid \\ self()), to: Server
 
   @spec id(module) :: id
@@ -138,11 +144,14 @@ defmodule Multiverses do
 
   @spec allow(module, pid | id, term) :: [{{module, pid}, id}]
   @doc """
+  Inspired by `Mox.allow/3`, this function assigns a process or registered name process
+  to be put into the shard of a pid or directly into a shard.
   """
   defdelegate allow(module, pid, allowed), to: Server
 
   @spec allow([{module, id}], term) :: [{{module, pid}, id}]
   @doc """
+  Utility version of allow/3 that lets you batch-assign multiple allowances
   """
   defdelegate allow(modules, allowed), to: Server
 
@@ -150,6 +159,11 @@ defmodule Multiverses do
   defdelegate all(module), to: Server
 
   @spec allow_for(module, id, (() -> result)) :: result when result: term
+  @doc """
+  temporarily assigns the running process to the shard, within the scope of
+  the provided lambda.  This is done through the process dictionary.  Other
+  processes will not be aware that this process has been added to the shard.
+  """
   def allow_for(module, id, fun) do
     Process.put({Multiverses, module}, id)
     result = fun.()
