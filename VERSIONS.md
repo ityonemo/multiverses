@@ -61,3 +61,22 @@
 ## 0.7.0
 
 - overhaul away from using macros
+
+## 0.8.0
+
+- removes GenServer and DynamicSupervisor shims, these are too confusing, they may come back later
+- changes function verbs for all multiverse functionality
+- runs a server, initial attempt at clustering support
+
+## 0.8.1
+
+- extra convenience functions
+
+## 0.9.0
+
+- bugfix on race condition for Application functions
+- don't use `:global` for clustering, instead use symmetric clustering
+- tests on clustering
+- temporary `Multiverses.allowfor/2` option
+- `Multiverses.list` option to track 
+- `Multiverses.shard/1` returns the universe id

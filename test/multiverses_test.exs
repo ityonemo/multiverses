@@ -1,4 +1,6 @@
-defmodule MultiversesTest do
+import MultiversesTest.Replicant
+
+defmoduler MultiversesTest do
   use ExUnit.Case, async: true
 
   alias Multiverses.UnexpectedCallError

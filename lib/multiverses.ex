@@ -105,13 +105,14 @@ defmodule Multiverses do
 
   @type id :: pos_integer()
 
-  @spec shard(module | [module]) :: :ok
+  @spec shard(module | [module]) :: [{module, id}]
   @doc """
   """
   defdelegate shard(modules), to: Server
 
   @spec shards :: [{module, id}]
-  defdelegate shards, to: Server
+  @spec shards(pid) :: [{module, id}]
+  defdelegate shards(pid \\ self()), to: Server
 
   @spec id(module) :: id
   @spec id(module, options :: keyword) :: id | nil
@@ -135,7 +136,7 @@ defmodule Multiverses do
     end
   end
 
-  @spec allow(module, pid | id, term) :: :ok
+  #@spec allow([{module, pid | id}], term) :: :ok
   @doc """
   """
   defdelegate allow(module, pid, allowed), to: Server
