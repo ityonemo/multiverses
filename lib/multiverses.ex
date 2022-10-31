@@ -16,7 +16,7 @@ defmodule Multiverses do
     ecto sandboxes to the parent test PID
 
   This library implements Multiverses-aware versions of several constructs
-  in the Elixir Standard Library which aren't natively Multiversable.
+  in the Elixir Standard Library that aren't natively Multiversable.
 
   For plugins that are provided for other systems, see the libraries:
 
@@ -25,7 +25,7 @@ defmodule Multiverses do
 
   ## Usage
 
-  In `mix.exs`, you should add the following directive:
+  In `mix.exs`, add the following directive:
 
   ```elixir
   {:multiverses, "~> #{Multiverses.MixProject.version()}", runtime: (Mix.env() == :test)}}
@@ -34,7 +34,7 @@ defmodule Multiverses do
   ### In your code
 
   For example, if you would like to use the `Multiverses` version of the `Application`
-  module (`Multiverses.Application`), you should add the following lines:
+  module (`Multiverses.Application`), add the following lines:
 
   To `config/config.exs`:
 
@@ -73,7 +73,7 @@ defmodule Multiverses do
   end
   ```
 
-  2. Your tests should have segregated appliction values!
+  2. Your tests have segregated application values!
 
   ```elixir
   defmodule MyModule do
@@ -107,7 +107,7 @@ defmodule Multiverses do
 
   @spec shard(module | [module]) :: [{module, id}]
   @doc """
-  creates a new shard for a particular domain module and assigns this pid to the
+  Creates a new shard for a particular domain module and assigns this pid to the
   shard.  You can batch assigning multiple shards as well.
   """
   defdelegate shard(modules), to: Server
@@ -115,7 +115,7 @@ defmodule Multiverses do
   @spec shards :: [{module, id}]
   @spec shards(pid) :: [{module, id}]
   @doc """
-  returns a list of multiverse domain modules and the respective shard-ids associated
+  Returns a list of multiverse domain modules and the respective shard-ids associated
   with those domain modules.
   """
   defdelegate shards(pid \\ self()), to: Server
@@ -160,7 +160,7 @@ defmodule Multiverses do
 
   @spec allow_for(module, id, (() -> result)) :: result when result: term
   @doc """
-  temporarily assigns the running process to the shard, within the scope of
+  Temporarily assigns the running process to the shard, within the scope of
   the provided lambda.  This is done through the process dictionary.  Other
   processes will not be aware that this process has been added to the shard.
   """
