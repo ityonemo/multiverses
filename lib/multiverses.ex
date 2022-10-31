@@ -20,7 +20,7 @@ defmodule Multiverses do
 
   For plugins that are provided for other systems, see the libraries:
 
-  - `:multiverses_req`  - which extends this to HTTP requests that exit the BEAM.
+  - `:multiverses_http`  - which extends this to HTTP requests that exit the BEAM.
   - `:multiverses_pubsub` - which extends this to Phoenix.PubSub
 
   ## Usage

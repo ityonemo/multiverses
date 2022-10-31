@@ -1,4 +1,4 @@
-if Application.compile_env!(:multiverses, :with_replicant) do
+if Application.compile_env(:multiverses, :with_replicant, false) do
   defmodule MultiversesTest.Replicant do
     @moduledoc """
     allows you to replicate test module multiple times, forcing them to
