@@ -80,3 +80,7 @@
 - temporary `Multiverses.allowfor/2` option
 - `Multiverses.list` option to track 
 - `Multiverses.shard/1` returns the universe id
+
+## 0.11.0
+
+- mostly documentation changes.  Likely to be last version before 1.0
