@@ -23,12 +23,17 @@ defmodule Multiverses do
   - `:multiverses_http`  - which extends this to HTTP requests that exit the BEAM.
   - `:multiverses_pubsub` - which extends this to Phoenix.PubSub
 
+  The following multiverse modules are provided by this core package:
+
+  - `Multiverses.Application` - which shards the application environment variables
+  - `Multiverses.Registry` - which shards Registries
+
   ## Usage
 
-  In `mix.exs`, add the following directive:
+  In `mix.exs`, add the following dependency:
 
   ```elixir
-  {:multiverses, "~> #{Multiverses.MixProject.version()}", runtime: (Mix.env() == :test)}}
+  {:multiverses, "~> #{Multiverses.MixProject.version()}", only: :test}
   ```
 
   ### In your code
@@ -142,12 +147,29 @@ defmodule Multiverses do
     end
   end
 
-  @spec allow(module, pid | id, term) :: [{{module, pid}, id}]
+  @spec allow(module, pid | id, pid) :: [{{module, pid}, id}]
   @doc """
   Inspired by `Mox.allow/3`, this function assigns a process or registered name process
   to be put into the shard of a pid or directly into a shard.
+
+  ### usage
+
+  The following is the most common use case, called from the test process, 
+  where you want to allow a spawned process to be put into the same shard 
+  as the test process.
+
+  ```elixir
+  Multiverses.allow(Application, self(), child_pid)
+  ```
+
+  In some cases you may want an allowance to occur from within the process
+  that needs access to the shard.  In this case, do the following:
+
+  ```elixir
+  Multiverses.allow(Application, multiverse_id, self())
+  ```
   """
-  defdelegate allow(module, pid, allowed), to: Server
+  defdelegate allow(module, owner_pid, allowed_via), to: Server
 
   @spec allow([{module, id}], term) :: [{{module, pid}, id}]
   @doc """

@@ -13,6 +13,15 @@ defmodule Multiverses.Registry do
   - `unregister_match/3,4`
   """
 
+  @doc false
+  def register_name(_, _)
+
+  @doc false
+  def send(_, _)
+
+  @doc false
+  def unregister_name(_)
+
   use Multiverses.Clone,
     module: Registry,
     except: [

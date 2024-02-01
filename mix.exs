@@ -1,7 +1,7 @@
 defmodule Multiverses.MixProject do
   use Mix.Project
 
-  def version, do: "0.10.0"
+  def version, do: "0.11.0"
 
   def project do
     [

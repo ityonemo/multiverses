@@ -1,7 +1,7 @@
 defmodule Multiverses.Clone do
   @moduledoc """
   allows a module to directly clone all of the public functions of a
-  given module, except as macros.
+  given module, except as delegations.
 
   thus multiverse equivalents replicate the functionality of the parent
   module.  Consider dropping a cloned module into a `test/support`
@@ -12,7 +12,8 @@ defmodule Multiverses.Clone do
 
   In the following example, `FooModule` has all of its functions ported
   into the current module as `defdelegate/2`.  The functions `FooModule.foo/3`
-  and `FooModule.foo/4` are not, but rather should be ported using `defclone/2`
+  and `FooModule.foo/4` are not, but rather should be manually implemented
+  (if used)
 
   ```elixir
   use Multiverses.Clone, with: FooModule, except: [
