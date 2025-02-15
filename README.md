@@ -34,6 +34,8 @@ defmodule MyModule do
 end
 ```
 
+For more details see the [documentation](https://hexdocs.pm/multiverses)
+
 ## Testing
 
 you can activate multiple copies of all the tests by passing the
