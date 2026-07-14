@@ -84,3 +84,8 @@
 ## 0.11.0
 
 - mostly documentation changes.  Likely to be last version before 1.0
+
+## 0.11.1
+
+- `Multiverses.id/2` with `strict: false` now returns `nil` for an
+  unsharded process instead of crashing
