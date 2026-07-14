@@ -84,15 +84,19 @@ defmodule Multiverses.Server do
   end
 
   def id(module, options) do
-    pair = id_pair(module)
     strict = Keyword.get(options, :strict, true)
 
-    unless not strict or pair do
-      raise UnexpectedCallError,
-            "no shard defined for module #{inspect(module)} in #{format_process()}"
-    end
+    case id_pair(module) do
+      {_pid, id} ->
+        id
 
-    elem(pair, 1)
+      nil when strict ->
+        raise UnexpectedCallError,
+              "no shard defined for module #{inspect(module)} in #{format_process()}"
+
+      nil ->
+        nil
+    end
   end
 
   defp id_pair(module) do

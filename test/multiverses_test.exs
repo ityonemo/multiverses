@@ -11,6 +11,10 @@ defmoduler MultiversesTest do
         Multiverses.id(Application)
       end
     end
+
+    test "obtaining the id with strict: false returns nil instead of crashing" do
+      assert Multiverses.id(Application, strict: false) == nil
+    end
   end
 
   describe "when you try to register the same shard more than once" do
