@@ -100,8 +100,13 @@ defmodule Multiverses.Server do
   end
 
   defp id_pair(module) do
-    callers = [self() | Process.get(:"$callers", [])]
-    id_pair(__MODULE__, module, callers)
+    # Walk both $callers and $ancestors: a Task/spawned process carries the shard
+    # owner in $callers, while a process started under a supervisor (e.g. ExUnit's
+    # start_supervised, or any DynamicSupervisor child) carries it in $ancestors.
+    lineage =
+      [self() | Process.get(:"$callers", [])] ++ Process.get(:"$ancestors", [])
+
+    id_pair(__MODULE__, module, lineage)
   end
 
   defp id_pair(table, module, callers) do
