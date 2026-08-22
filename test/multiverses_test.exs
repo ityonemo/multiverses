@@ -46,6 +46,31 @@ defmoduler MultiversesTest do
     end
   end
 
+  describe "a process started with start_supervised" do
+    defmodule Reporter do
+      use GenServer
+
+      def start_link(owner), do: GenServer.start_link(__MODULE__, owner)
+
+      @impl true
+      def init(owner) do
+        # ExUnit's test supervisor puts the test pid in the child's $ancestors
+        # (not $callers), so id/1 must consult $ancestors to resolve the shard.
+        send(owner, {:universe, Multiverses.id(Registry, strict: false)})
+        {:ok, owner}
+      end
+    end
+
+    test "sees the test's shard through $ancestors" do
+      Multiverses.shard(Registry)
+      shard_id = Multiverses.id(Registry)
+
+      {:ok, _pid} = start_supervised({Reporter, self()})
+
+      assert_receive {:universe, ^shard_id}
+    end
+  end
+
   describe "the allow function" do
     test "puts a pid into a shard, by pid reference" do
       this = self()
