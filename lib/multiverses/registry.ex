@@ -13,15 +13,6 @@ defmodule Multiverses.Registry do
   - `unregister_match/3,4`
   """
 
-  @doc false
-  def register_name(_, _)
-
-  @doc false
-  def send(_, _)
-
-  @doc false
-  def unregister_name(_)
-
   use Multiverses.Clone,
     module: Registry,
     except: [
@@ -34,6 +25,12 @@ defmodule Multiverses.Registry do
       unregister: 2,
       update_value: 3,
       select: 2,
+      # the :via callbacks must namespace the key by universe, like whereis_name;
+      # the plain Registry delegates would register/unregister/send under the bare
+      # key, which whereis_name (namespaced) could never find.
+      register_name: 2,
+      unregister_name: 1,
+      send: 2,
       whereis_name: 1,
       # these two functions are deprecated.
       start_link: 3,
@@ -146,4 +143,21 @@ defmodule Multiverses.Registry do
 
   def whereis_name({registry, key}), do: Registry.whereis_name({registry, {id(), key}})
   def whereis_name({registry, key, _value}), do: Registry.whereis_name({registry, {id(), key}})
+
+  # :via registration callbacks — namespace the key by universe so a process
+  # registered via `{:via, Multiverses.Registry, {reg, key}}` is found by the
+  # namespaced whereis_name/lookup above.
+  def register_name({registry, key}, pid),
+    do: Registry.register_name({registry, {id(), key}}, pid)
+
+  def register_name({registry, key, value}, pid),
+    do: Registry.register_name({registry, {id(), key}, value}, pid)
+
+  def unregister_name({registry, key}), do: Registry.unregister_name({registry, {id(), key}})
+
+  def unregister_name({registry, key, _value}),
+    do: Registry.unregister_name({registry, {id(), key}})
+
+  def send({registry, key}, msg), do: Registry.send({registry, {id(), key}}, msg)
+  def send({registry, key, _value}, msg), do: Registry.send({registry, {id(), key}}, msg)
 end
